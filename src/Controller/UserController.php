@@ -85,7 +85,8 @@ class UserController extends AbstractController
                 "email" => $user->getEmail(),
                 "name" => $userData->getName(),
                 "surname" => $userData->getSurname(),
-                "dni" => $userData->getDni()
+                "dni" => $userData->getDni(),
+                "roles" => $user->getRoles()
             );
 
         } catch (Exception $ex) {
