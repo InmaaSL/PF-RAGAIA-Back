@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\UserDataRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserDataRepository::class)]
 class UserData
@@ -11,22 +12,28 @@ class UserData
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['user:main'])]
     private ?int $id = null;
 
     #[ORM\OneToOne(inversedBy: 'userData', cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['user:main'])]
     private ?User $user = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:main'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:main'])]
     private ?string $surname = null;
 
     #[ORM\Column(length: 20)]
+    #[Groups(['user:main'])]
     private ?string $dni = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:main'])]
     private ?string $email = null;
 
     public function getId(): ?int

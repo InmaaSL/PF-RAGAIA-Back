@@ -24,11 +24,29 @@ use App\Entity\UserData;
 
 use OpenApi\Annotations as OA;
 
+use App\Service\DtoService;
+use App\Service\RestService;
+
 /**
  * @Route("/api", name="api_")
  */
-class UserController extends AbstractController
+class UserController extends BaseControllerWithExtras
 {
+
+    /**
+     * MealsController constructor.
+     * @param DtoService $dtoSvc
+     */
+    public function __construct(
+        DtoService $dtoSvc,
+        RestService $restService,
+        // PermissionService $permissionSvc,
+        ) {
+        parent::__construct($restService, $dtoSvc);
+        $this->restService = $restService;
+        $this->dtoService = $dtoSvc;
+    }
+
     /**
      * @Route(
      *     "/user/getUserData",
@@ -86,7 +104,9 @@ class UserController extends AbstractController
                 "name" => $userData->getName(),
                 "surname" => $userData->getSurname(),
                 "dni" => $userData->getDni(),
-                "roles" => $user->getRoles()
+                "roles" => $user->getRoles(),
+                "centre" => $user->getWorkplace(),
+                "profesional_category" => $user->getProfesionalCategory()
             );
 
         } catch (Exception $ex) {
@@ -101,7 +121,9 @@ class UserController extends AbstractController
             'data' => $code == 200 ? $ar : $message,
         ];
 
-        return new Response($serializer->serialize($response, "json"));
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($response, $groups);
+
     }
 
     /**
@@ -174,7 +196,7 @@ class UserController extends AbstractController
             'data' => $code == 200 ? $ar : $message,
         ];
 
-        return new Response($serializer->serialize($response, "json"));
+        return $this->dtoService->getJson($response);
     }
 
     /**
@@ -274,6 +296,9 @@ class UserController extends AbstractController
                         // "province" => $userData->getProvince() ? $userData->getProvince() : '',
                         // "country" => $userData->getCountry() ? $userData->getCountry() : '',
                         "email" => $userData->getEmail() ? $userData->getEmail() : $userData->getUser()->getEmail(),
+                        "centre" => $user->getWorkplace(),
+                        "profesional_category" => $user->getProfesionalCategory()
+        
                         // "last_login" => $userData->getLastLogin() ? $userData->getLastLogin() : ''
 
                     );
@@ -302,7 +327,8 @@ class UserController extends AbstractController
             'data' => $code == 200 ? $ar : $message,
         ];
 
-        return new Response($serializer->serialize($response, "json"));
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($response, $groups);
     }
 
     /**
@@ -413,6 +439,9 @@ class UserController extends AbstractController
                                 "dni" => $us->getUserData()->getDni() ? $us->getUserData()->getDni() : '',
                                 // "last_login" => $us->getUSerData()->getLastlogin() ? $us->getUSerData()->getLastlogin() : '',
                                 "is_deleted" => $us->isDeleted() ? $us->isDeleted() : '',
+                                "centre" => $us->getWorkplace(),
+                                "profesional_category" => $us->getProfesionalCategory()
+                
                             );
                             $users[] = $ar;
                         }
@@ -445,6 +474,9 @@ class UserController extends AbstractController
                                 "dni" => $us->getUserData()->getDni() ? $us->getUserData()->getDni() : '',
                                 // "last_login" => $us->getUSerData()->getLastlogin() ? $us->getUSerData()->getLastlogin() : '',
                                 "is_deleted" => $us->isDeleted() ? $us->isDeleted() : '',
+                                "centre" => $us->getWorkplace(),
+                                "profesional_category" => $us->getProfesionalCategory()
+                
                             );
                             $users[] = $ar;
                         }
@@ -465,8 +497,8 @@ class UserController extends AbstractController
             'data' => $code == 200 ? $users : $message,
         ];
 
-        // return $this->dtoService->getJson($response);
-        return new Response($serializer->serialize($response, "json"));
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($response, $groups);
 
     }
 
@@ -565,8 +597,7 @@ class UserController extends AbstractController
             'data' => $code == 200 ? "Deleted" : $message,
         ];
 
-        return new Response($serializer->serialize($response, "json"));
-        // return $this->dtoService->getJson($response);
+        return $this->dtoService->getJson($response);
     }
 
 }

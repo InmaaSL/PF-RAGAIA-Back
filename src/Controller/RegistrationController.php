@@ -21,14 +21,33 @@ use JMS\Serializer\SerializerInterface;
 
 use App\Entity\User;
 use App\Entity\UserData;
+use App\Entity\ProfesionalCategory;
+use App\Entity\Centre;
 
 use OpenApi\Annotations as OA;
+
+use App\Service\DtoService;
+use App\Service\RestService;
 
 /**
  * @Route("/api", name="api_")
  */
-class RegistrationController extends AbstractController
+class RegistrationController extends BaseControllerWithExtras
 {
+
+    /**
+     * MealsController constructor.
+     * @param DtoService $dtoSvc
+     */
+    public function __construct(
+        DtoService $dtoSvc,
+        RestService $restService,
+        // PermissionService $permissionSvc,
+        ) {
+        parent::__construct($restService, $dtoSvc);
+        $this->restService = $restService;
+        $this->dtoService = $dtoSvc;
+    }
 
     /**
      * @Route("/register", 
@@ -105,10 +124,10 @@ class RegistrationController extends AbstractController
         $em->persist($userData);
         $em->flush();
 
-        $response = ([$user->getId(),
-                    $userData->getId()]);
+        $response = ($user);
 
-        return new Response($serializer->serialize($response, "json"));
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($response, $groups);
     }
 
     /**
@@ -162,7 +181,6 @@ class RegistrationController extends AbstractController
      *                  description="User name",
      *                  type="string"
      *              ),
-
      *              @OA\Property(
      *                  property="surname",
      *                  description="User surname",
@@ -171,6 +189,16 @@ class RegistrationController extends AbstractController
      *              @OA\Property(
      *                  property="dni",
      *                  description="User DNI/NIE",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="centre",
+     *                  description="User workplace id",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="profesional_category",
+     *                  description="User profesional category id",
      *                  type="string"
      *              ),
      *          )
@@ -198,6 +226,8 @@ class RegistrationController extends AbstractController
 
         $em = $doctrine->getManager();
         $repositoryUserData = $doctrine->getRepository(UserData::class);
+        $repositoryProfesionalCategory = $doctrine->getRepository(ProfesionalCategory::class);
+        $repositoryCentre = $doctrine->getRepository(Centre::class);
 
         $message = "";
 
@@ -209,6 +239,8 @@ class RegistrationController extends AbstractController
             $surname = $request->request->get('surname');
             $email = $request->request->get('email');
             $dni = $request->request->get('dni');
+            $centre = $request->request->get('centre');
+            $profesionalCategory = $request->request->get('profesional_category');
 
             $user = $repositoryUser->find($user_id);
 
@@ -221,6 +253,14 @@ class RegistrationController extends AbstractController
                     $newUser = true;
                     $userData = new UserData();
                 }
+
+                if($profesionalCategory){
+                    $profCategoryId = $repositoryProfesionalCategory->find($profesionalCategory);
+                }
+
+                if($centre){
+                    $centreId = $repositoryCentre->find($centre);
+                }
                 
                 if(!$newUser){
                     // Comprobamos si algun USER tienes ese email en concreto:
@@ -228,6 +268,8 @@ class RegistrationController extends AbstractController
                     
                     if(!$userExists || $userExists->getId() == $user->getId()){
                         $user->setEmail($email);
+                        $user->addProfesionalCategory($profCategoryId ? $profCategoryId : '');
+                        $user->addWorkplace($centreId ? $centreId : '');
 
                         $userData->setName($name);
                         $userData->setSurname($surname);
@@ -279,10 +321,11 @@ class RegistrationController extends AbstractController
         $response = [
             'code' => $code,
             'error' => $error,
-            'data' => $code == 200 ? $userData->getId() : $message,
+            'data' => $code == 200 ? $user : $message,
         ];
 
-        return new Response($serializer->serialize($response, "json"));
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($response, $groups);
     }
 
 }
