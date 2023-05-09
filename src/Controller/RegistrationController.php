@@ -95,8 +95,8 @@ class RegistrationController extends BaseControllerWithExtras
 
         $em = $doctrine->getManager();
 
-        $email = $request->request->get('email');
-        $password = $request->request->get('password');
+        $email = $request->get('email');
+        $password = $request->get('password');
 
         $datos = $request->getContent();
         $parameters = json_decode($request->getContent(), true);
@@ -235,12 +235,12 @@ class RegistrationController extends BaseControllerWithExtras
             $code = 200;
             $error = false;
             
-            $name = $request->request->get('name');
-            $surname = $request->request->get('surname');
-            $email = $request->request->get('email');
-            $dni = $request->request->get('dni');
-            $centre = $request->request->get('centre');
-            $profesionalCategory = $request->request->get('profesional_category');
+            $name = $request->get('name');
+            $surname = $request->get('surname');
+            $email = $request->get('email');
+            $dni = $request->get('dni');
+            $centre = $request->get('centre');
+            $profesionalCategory = $request->get('profesional_category');
 
             $user = $repositoryUser->find($user_id);
 

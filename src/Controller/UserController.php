@@ -21,6 +21,8 @@ use JMS\Serializer\SerializerInterface;
 
 use App\Entity\User;
 use App\Entity\UserData;
+use App\Entity\ProfesionalCategory;
+use App\Entity\Centre;
 
 use OpenApi\Annotations as OA;
 
@@ -598,6 +600,155 @@ class UserController extends BaseControllerWithExtras
         ];
 
         return $this->dtoService->getJson($response);
+    }
+
+    /**
+     * @Route(
+     *     "/getProfesionalCategories",
+     *     name="Get all the profesional categories",
+     *     methods={ "GET" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error getting all the profesional categories"
+     * )
+     *
+     * @OA\Response(
+     *     response="200",
+     *     description="Get all the profesional categories",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="userDataID", type="integer"),
+     *           )
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Authentication error",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     *
+     * @OA\Tag(name="User")
+     */
+    public function getProfesionalCategories(ManagerRegistry $doctrine)
+    {
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $message = "";
+
+        try {
+            $code = 200;
+            $error = false;
+
+            $profesionalCategoriesArray = [];
+
+            $profesionalCategories = $doctrine->getRepository(ProfesionalCategory::class)->findAll();
+
+            foreach($profesionalCategories as $pc)
+            {
+                if($pc instanceof ProfesionalCategory)
+                {
+                    $ar = array(
+                        "id" => $pc->getId(),
+                        "name" => $pc->getName() ? $pc->getName() : '',
+                    );
+                    $profesionalCategoriesArray[] = $ar;
+                }
+            }
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to get my user info - Error: {$ex->getMessage()}";
+        }
+
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($profesionalCategoriesArray, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/getCentres",
+     *     name="Get all centres",
+     *     methods={ "GET" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error getting all centres"
+     * )
+     *
+     * @OA\Response(
+     *     response="200",
+     *     description="Get all centres",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="userDataID", type="integer"),
+     *           )
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Authentication error",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     *
+     * @OA\Tag(name="User")
+     */
+    public function getCentres(ManagerRegistry $doctrine)
+    {
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $message = "";
+
+        try {
+            $code = 200;
+            $error = false;
+
+            $centresArray = [];
+
+            $centres = $doctrine->getRepository(Centre::class)->findAll();
+
+            foreach($centres as $c)
+            {
+                if($c instanceof Centre)
+                {
+                    $ar = array(
+                        "id" => $c->getId(),
+                        "name" => $c->getName() ? $c->getName() : '',
+                    );
+                    $centresArray[] = $ar;
+                }
+            }
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to get my user info - Error: {$ex->getMessage()}";
+        }
+
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($centresArray, $groups);
+
     }
 
 }
