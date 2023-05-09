@@ -201,6 +201,31 @@ class RegistrationController extends BaseControllerWithExtras
      *                  description="User profesional category id",
      *                  type="string"
      *              ),
+     *              @OA\Property(
+     *                  property="phone",
+     *                  description="User phone",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="address",
+     *                  description="User address",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="town",
+     *                  description="town",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="province",
+     *                  description="User province",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="postal_code",
+     *                  description="User postal code",
+     *                  type="string"
+     *              )
      *          )
      *      )
      * )
@@ -241,6 +266,12 @@ class RegistrationController extends BaseControllerWithExtras
             $dni = $request->get('dni');
             $centre = $request->get('centre');
             $profesionalCategory = $request->get('profesional_category');
+            $phone = $request->get('phone');
+            $address = $request->get('address');
+            $town = $request->get('town');
+            $province = $request->get('province');
+            $postal_code = $request->get('postal_code');
+
 
             $user = $repositoryUser->find($user_id);
 
@@ -275,6 +306,11 @@ class RegistrationController extends BaseControllerWithExtras
                         $userData->setSurname($surname);
                         $userData->setEmail($email);
                         $userData->setDni($dni);
+                        $userData->setPhone($phone ? $phone : '');
+                        $userData->setAddress($address ? $address : '');
+                        $userData->setTown($town ? $town : '');
+                        $userData->setProvince($province ? $province : '');
+                        $userData->setPostalCode($postal_code ? $postal_code : '');
 
                         $code = 200;
                         $error = false;
@@ -292,6 +328,11 @@ class RegistrationController extends BaseControllerWithExtras
                         $userData->setSurname($surnames);
                         $userData->setDni($dni);
                         $userData->setEmail($email);
+                        $userData->setPhone($phone ? $phone : '');
+                        $userData->setAddress($address ? $address : '');
+                        $userData->setTown($town ? $town : '');
+                        $userData->setProvince($province ? $province : '');
+                        $userData->setPostalCode($postal_code ? $postal_code : '');
 
                     } else {
                         $code = 500;

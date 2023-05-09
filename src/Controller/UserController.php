@@ -108,7 +108,13 @@ class UserController extends BaseControllerWithExtras
                 "dni" => $userData->getDni(),
                 "roles" => $user->getRoles(),
                 "centre" => $user->getWorkplace(),
-                "profesional_category" => $user->getProfesionalCategory()
+                "profesional_category" => $user->getProfesionalCategory(),
+                "phone" => $userData->getPhone(),
+                "address" => $userData->getAddress(),
+                "town" => $userData->getTown(),
+                "province" => $userData->getProvince(),
+                "postal_code" => $userData->getPostalCode(),
+                
             );
 
         } catch (Exception $ex) {
@@ -226,18 +232,6 @@ class UserController extends BaseControllerWithExtras
      *         type="object",
      *         @OA\Property(property="code", type="integer", example="200"),
      *         @OA\Property(property="data", type="object",
-     *                  @OA\Property(property="userDataID", type="integer"),
-     *                  @OA\Property(property="name", type="string"),
-     *                  @OA\Property(property="surnames", type="string"),
-     *                  @OA\Property(property="nif", type="string"),
-     *                  @OA\Property(property="phone", type="string"),
-     *                  @OA\Property(property="address", type="string"),
-     *                  @OA\Property(property="postal_code", type="string"),
-     *                  @OA\Property(property="city", type="string"),
-     *                  @OA\Property(property="province", type="string"),
-     *                  @OA\Property(property="country", type="string"),
-     *                  @OA\Property(property="email", type="string"),
-     *                  @OA\Property(property="last_login", type="datetime"),
      *           )
      *     )
      * )
@@ -291,18 +285,14 @@ class UserController extends BaseControllerWithExtras
                         "name" => $userData->getName() ? $userData->getName() : '',
                         "surname" => $userData->getSurname() ? $userData->getSurname() : '',
                         "dni" => $userData->getDni() ? $userData->getDni() : '',
-                        // "phone" => $userData->getPhoneNumber() ? $userData->getPhoneNumber() : '',
-                        // "address" => $userData->getAddress() ? $userData->getAddress() : '',
-                        // "postal_code" => $userData->getPostalCode() ? $userData->getPostalCode() : '',
-                        // "city" => $userData->getCity() ? $userData->getCity() : '',
-                        // "province" => $userData->getProvince() ? $userData->getProvince() : '',
-                        // "country" => $userData->getCountry() ? $userData->getCountry() : '',
                         "email" => $userData->getEmail() ? $userData->getEmail() : $userData->getUser()->getEmail(),
-                        "centre" => $user->getWorkplace(),
-                        "profesional_category" => $user->getProfesionalCategory()
-        
-                        // "last_login" => $userData->getLastLogin() ? $userData->getLastLogin() : ''
-
+                        "centre" => $user->getWorkplace() ? $user->getWorkplace() : '',
+                        "profesional_category" => $user->getProfesionalCategory() ? $user->getProfesionalCategory() : '',
+                        "phone" => $userData->getPhone() ? $userData->getPhone() : '',
+                        "address" => $userData->getAddress() ? $userData->getAddress() : '',
+                        "town" => $userData->getTown() ? $userData->getTown() : '',
+                        "province" => $userData->getProvince() ? $userData->getProvince() : '',
+                        "postal_code" => $userData->getPostalCode() ? $userData->getPostalCode() : ''
                     );
                 }
                 else
@@ -428,21 +418,16 @@ class UserController extends BaseControllerWithExtras
                             $ar = array(
                                 "id" => $us->getId(),
                                 "email" => $us->getEmail() ? $us->getEmail() : '',
-                                // "username" => $us->getUsername() ? $us->getUsername() : '',
                                 "roles" => $us->getRoles() ? $us->getRoles() : '',
                                 "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
                                 "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                // "phone_number" => $us->getUSerData()->getPhoneNumber() ? $us->getUSerData()->getPhoneNumber() : '',
-                                // "address" => $us->getUSerData()->getAddress() ? $us->getUSerData()->getAddress() : '',
-                                // "city" => $us->getUSerData()->getCity() ? $us->getUSerData()->getCity() : '',
-                                // "postal_code" => $us->getUSerData()->getPostalCode() ? $us->getUSerData()->getPostalCode() : '',
-                                // "province" => $us->getUSerData()->getProvince() ? $us->getUSerData()->getProvince() : '',
-                                // "country" => $us->getUSerData()->getCountry() ? $us->getUSerData()->getCountry() : '',
-                                "dni" => $us->getUserData()->getDni() ? $us->getUserData()->getDni() : '',
-                                // "last_login" => $us->getUSerData()->getLastlogin() ? $us->getUSerData()->getLastlogin() : '',
-                                "is_deleted" => $us->isDeleted() ? $us->isDeleted() : '',
-                                "centre" => $us->getWorkplace(),
-                                "profesional_category" => $us->getProfesionalCategory()
+                                "centre" => $us->getWorkplace() ? $us->getWorkplace() : '',
+                                "profesional_category" => $us->getProfesionalCategory() ? $us->getProfesionalCategory() : '',
+                                "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
+                                "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
+                                "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
+                                "province" => $us->getUserData()->getProvince() ? $us->getUserData()->getProvince() : '',
+                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : ''
                 
                             );
                             $users[] = $ar;
@@ -460,25 +445,16 @@ class UserController extends BaseControllerWithExtras
                             $ar = array(
                                 "id" => $us->getId(),
                                 "email" => $us->getEmail() ? $us->getEmail() : '',
-                                // "username" => $us->getUsername() ? $us->getUsername() : '',
                                 "roles" => $us->getRoles() ? $us->getRoles() : '',
                                 "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
-                                // "name" => $uUSerData->getName(),
                                 "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                // "surname" => $uUSerData->getSurname(),
-                                // "phone_number" => $us->getUSerData()->getPhoneNumber() ? $us->getUSerData()->getPhoneNumber() : '',
-                                //"phone_number" => $uUSerData->getPhoneNumber(),
-                                // "address" => $us->getUSerData()->getAddress() ? $us->getUSerData()->getAddress() : '',
-                                // "city" => $us->getUSerData()->getCity() ? $us->getUSerData()->getCity() : '',
-                                // "postal_code" => $us->getUSerData()->getPostalCode() ? $us->getUSerData()->getPostalCode() : '',
-                                // "province" => $us->getUSerData()->getProvince() ? $us->getUSerData()->getProvince() : '',
-                                // "country" => $us->getUSerData()->getCountry() ? $us->getUSerData()->getCountry() : '',
-                                "dni" => $us->getUserData()->getDni() ? $us->getUserData()->getDni() : '',
-                                // "last_login" => $us->getUSerData()->getLastlogin() ? $us->getUSerData()->getLastlogin() : '',
-                                "is_deleted" => $us->isDeleted() ? $us->isDeleted() : '',
-                                "centre" => $us->getWorkplace(),
-                                "profesional_category" => $us->getProfesionalCategory()
-                
+                                "centre" => $us->getWorkplace() ? $us->getWorkplace() : '',
+                                "profesional_category" => $us->getProfesionalCategory() ? $us->getProfesionalCategory() : '',
+                                "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
+                                "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
+                                "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
+                                "province" => $us->getUserData()->getProvince() ? $us->getUserData()->getProvince() : '',
+                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : ''                
                             );
                             $users[] = $ar;
                         }

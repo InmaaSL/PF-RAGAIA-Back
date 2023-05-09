@@ -36,6 +36,26 @@ class UserData
     #[Groups(['user:main'])]
     private ?string $email = null;
 
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $phone = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $address = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $town = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $province = null;
+
+    #[ORM\Column(length: 10, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $postal_code = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -97,6 +117,66 @@ class UserData
     public function setEmail(string $email): self
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(?string $phone): self
+    {
+        $this->phone = $phone;
+
+        return $this;
+    }
+
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
+
+    public function setAddress(?string $address): self
+    {
+        $this->address = $address;
+
+        return $this;
+    }
+
+    public function getTown(): ?string
+    {
+        return $this->town;
+    }
+
+    public function setTown(?string $town): self
+    {
+        $this->town = $town;
+
+        return $this;
+    }
+
+    public function getProvince(): ?string
+    {
+        return $this->province;
+    }
+
+    public function setProvince(?string $province): self
+    {
+        $this->province = $province;
+
+        return $this;
+    }
+
+    public function getPostalCode(): ?string
+    {
+        return $this->postal_code;
+    }
+
+    public function setPostalCode(?string $postal_code): self
+    {
+        $this->postal_code = $postal_code;
 
         return $this;
     }
