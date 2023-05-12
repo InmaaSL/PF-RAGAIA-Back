@@ -264,8 +264,8 @@ class RegistrationController extends BaseControllerWithExtras
             $surname = $request->get('surname');
             $email = $request->get('email');
             $dni = $request->get('dni');
-            $centre = $request->get('centre');
-            $profesionalCategory = $request->get('profesional_category');
+            // $centre = $request->get('centre');
+            // $profesionalCategory = $request->get('profesional_category');
             $phone = $request->get('phone');
             $address = $request->get('address');
             $town = $request->get('town');
@@ -285,13 +285,13 @@ class RegistrationController extends BaseControllerWithExtras
                     $userData = new UserData();
                 }
 
-                if($profesionalCategory){
-                    $profCategoryId = $repositoryProfesionalCategory->find($profesionalCategory);
-                }
+                // if($profesionalCategory){
+                //     $profCategoryId = $repositoryProfesionalCategory->find($profesionalCategory);
+                // }
 
-                if($centre){
-                    $centreId = $repositoryCentre->find($centre);
-                }
+                // if($centre){
+                //     $centreId = $repositoryCentre->find($centre);
+                // }
                 
                 if(!$newUser){
                     // Comprobamos si algun USER tienes ese email en concreto:
@@ -299,8 +299,8 @@ class RegistrationController extends BaseControllerWithExtras
                     
                     if(!$userExists || $userExists->getId() == $user->getId()){
                         $user->setEmail($email);
-                        $user->addProfesionalCategory($profCategoryId ? $profCategoryId : '');
-                        $user->addWorkplace($centreId ? $centreId : '');
+                        // $user->addProfesionalCategory($profCategoryId ? $profCategoryId : '');
+                        // $user->addWorkplace($centreId ? $centreId : '');
 
                         $userData->setName($name);
                         $userData->setSurname($surname);
@@ -325,7 +325,7 @@ class RegistrationController extends BaseControllerWithExtras
                     if(!$userDataExists){
                         $userData->setUser($user);
                         $userData->setName($name);
-                        $userData->setSurname($surnames);
+                        $userData->setSurname($surname);
                         $userData->setDni($dni);
                         $userData->setEmail($email);
                         $userData->setPhone($phone ? $phone : '');

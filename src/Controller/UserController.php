@@ -23,11 +23,13 @@ use App\Entity\User;
 use App\Entity\UserData;
 use App\Entity\ProfesionalCategory;
 use App\Entity\Centre;
+use App\Controller\Exception;
 
 use OpenApi\Annotations as OA;
 
 use App\Service\DtoService;
 use App\Service\RestService;
+use App\Service\UserService;
 
 /**
  * @Route("/api", name="api_")
@@ -35,17 +37,22 @@ use App\Service\RestService;
 class UserController extends BaseControllerWithExtras
 {
 
+    private $userService;
+
     /**
      * MealsController constructor.
      * @param DtoService $dtoSvc
+     * @param UserService $userService
      */
     public function __construct(
         DtoService $dtoSvc,
         RestService $restService,
+        UserService $userService,
         // PermissionService $permissionSvc,
         ) {
         parent::__construct($restService, $dtoSvc);
         $this->restService = $restService;
+        $this->userService = $userService;
         $this->dtoService = $dtoSvc;
     }
 
@@ -107,8 +114,8 @@ class UserController extends BaseControllerWithExtras
                 "surname" => $userData->getSurname(),
                 "dni" => $userData->getDni(),
                 "roles" => $user->getRoles(),
-                "centre" => $user->getWorkplace(),
-                "profesional_category" => $user->getProfesionalCategory(),
+                // "centre" => $user->getWorkplace(),
+                // "profesional_category" => $user->getProfesionalCategory(),
                 "phone" => $userData->getPhone(),
                 "address" => $userData->getAddress(),
                 "town" => $userData->getTown(),
@@ -286,8 +293,8 @@ class UserController extends BaseControllerWithExtras
                         "surname" => $userData->getSurname() ? $userData->getSurname() : '',
                         "dni" => $userData->getDni() ? $userData->getDni() : '',
                         "email" => $userData->getEmail() ? $userData->getEmail() : $userData->getUser()->getEmail(),
-                        "centre" => $user->getWorkplace() ? $user->getWorkplace() : '',
-                        "profesional_category" => $user->getProfesionalCategory() ? $user->getProfesionalCategory() : '',
+                        // "centre" => $user->getWorkplace() ? $user->getWorkplace() : '',
+                        // "profesional_category" => $user->getProfesionalCategory() ? $user->getProfesionalCategory() : '',
                         "phone" => $userData->getPhone() ? $userData->getPhone() : '',
                         "address" => $userData->getAddress() ? $userData->getAddress() : '',
                         "town" => $userData->getTown() ? $userData->getTown() : '',
@@ -320,7 +327,7 @@ class UserController extends BaseControllerWithExtras
         ];
 
         $groups = ["user:main"];
-        return $this->dtoService->getJson($response, $groups);
+        return $this->dtoService->getJson($ar, $groups);
     }
 
     /**
@@ -421,8 +428,8 @@ class UserController extends BaseControllerWithExtras
                                 "roles" => $us->getRoles() ? $us->getRoles() : '',
                                 "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
                                 "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                "centre" => $us->getWorkplace() ? $us->getWorkplace() : '',
-                                "profesional_category" => $us->getProfesionalCategory() ? $us->getProfesionalCategory() : '',
+                                // "centre" => $us->getWorkplace() ? $us->getWorkplace() : '',
+                                // "profesional_category" => $us->getProfesionalCategory() ? $us->getProfesionalCategory() : '',
                                 "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
                                 "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
                                 "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
@@ -448,8 +455,8 @@ class UserController extends BaseControllerWithExtras
                                 "roles" => $us->getRoles() ? $us->getRoles() : '',
                                 "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
                                 "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                "centre" => $us->getWorkplace() ? $us->getWorkplace() : '',
-                                "profesional_category" => $us->getProfesionalCategory() ? $us->getProfesionalCategory() : '',
+                                // "centre" => $us->getWorkplace() ? $us->getWorkplace() : '',
+                                // "profesional_category" => $us->getProfesionalCategory() ? $us->getProfesionalCategory() : '',
                                 "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
                                 "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
                                 "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
@@ -484,7 +491,7 @@ class UserController extends BaseControllerWithExtras
      * @Route(
      *     "/user/delete/{id}",
      *     name="Delete user by id",
-     *     methods={ "DELETE" },
+     *     methods={ "POST" },
      * )
      *
      * @OA\Response(
@@ -580,19 +587,19 @@ class UserController extends BaseControllerWithExtras
 
     /**
      * @Route(
-     *     "/getProfesionalCategories",
-     *     name="Get all the profesional categories",
+     *     "/getProfessionalCategories",
+     *     name="Get all the professional categories",
      *     methods={ "GET" },
      * )
      *
      * @OA\Response(
      *     response=500,
-     *     description="Error getting all the profesional categories"
+     *     description="Error getting all the professional categories"
      * )
      *
      * @OA\Response(
      *     response="200",
-     *     description="Get all the profesional categories",
+     *     description="Get all the professional categories",
      *     @OA\JsonContent(
      *         type="object",
      *         @OA\Property(property="code", type="integer", example="200"),
@@ -626,11 +633,11 @@ class UserController extends BaseControllerWithExtras
             $code = 200;
             $error = false;
 
-            $profesionalCategoriesArray = [];
+            $professionalCategoriesArray = [];
 
-            $profesionalCategories = $doctrine->getRepository(ProfesionalCategory::class)->findAll();
+            $professionalCategories = $doctrine->getRepository(ProfesionalCategory::class)->findAll();
 
-            foreach($profesionalCategories as $pc)
+            foreach($professionalCategories as $pc)
             {
                 if($pc instanceof ProfesionalCategory)
                 {
@@ -638,7 +645,7 @@ class UserController extends BaseControllerWithExtras
                         "id" => $pc->getId(),
                         "name" => $pc->getName() ? $pc->getName() : '',
                     );
-                    $profesionalCategoriesArray[] = $ar;
+                    $professionalCategoriesArray[] = $ar;
                 }
             }
 
@@ -649,7 +656,7 @@ class UserController extends BaseControllerWithExtras
         }
 
         $groups = ["user:main"];
-        return $this->dtoService->getJson($profesionalCategoriesArray, $groups);
+        return $this->dtoService->getJson($professionalCategoriesArray, $groups);
     }
 
     /**
@@ -726,5 +733,144 @@ class UserController extends BaseControllerWithExtras
         return $this->dtoService->getJson($centresArray, $groups);
 
     }
+
+    /**
+     * @Route(
+     *     "/v2/user",
+     *     name="users",
+     *     methods={ "GET" },
+     * )
+     */
+    public function getUsers() {
+        $group = ["user:main"];
+
+        $users = $this->userService->getAll();
+        return $this->dtoService->getJson($users,$group);
+    }
+
+    /**
+     * @Route(
+     *     "/v2/worker",
+     *     name="workers",
+     *     methods={ "GET" },
+     * )
+     */
+    public function getWorkers() {
+        $group = ["user:main"];
+
+        $users = $this->userService->getAllWorkers();
+        return $this->dtoService->getJson($users,$group);
+    }
+
+    /**
+     * @Route(
+     *     "/v2/nna/{id}",
+     *     name="nns",
+     *     methods={ "GET" },
+     * )
+     * @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     required=true,
+     *     description="User id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="c",
+     *     in="query",
+     *     required=false,
+     *     description="Count",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * * @OA\Parameter(
+     *     name="p",
+     *     in="query",
+     *     required=false,
+     *     description="Page",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="s",
+     *     in="query",
+     *     required=false,
+     *     description="Sort",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="f",
+     *     in="query",
+     *     required=false,
+     *     description="Filter",
+     *     @OA\Schema(type="string")
+     * )
+     */
+    public function getAllNNA(Request $request, $id) {
+        $group = ["user:main"];
+
+        $dataRequested = $this->restService->getRequestedData($request);
+        $users = $this->userService->getAllNNA($dataRequested);
+        return $this->dtoService->getJson($users,$group);
+    }
+
+    /**
+     * @Route(
+     *     "/v2/user/{id}",
+     *     name="userInfo",
+     *     methods={ "GET" },
+     * )
+     * 
+     * * @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     required=true,
+     *     description="User id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="c",
+     *     in="query",
+     *     required=false,
+     *     description="Count",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * * @OA\Parameter(
+     *     name="p",
+     *     in="query",
+     *     required=false,
+     *     description="Page",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="s",
+     *     in="query",
+     *     required=false,
+     *     description="Sort",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="f",
+     *     in="query",
+     *     required=false,
+     *     description="Filter",
+     *     @OA\Schema(type="string")
+     * )
+     */
+    public function getUsersPaginated(Request $request, $id) {
+        $group = ["user:main"];
+        
+        $dataRequested = $this->restService->getRequestedData($request);
+        $user = $this->userService->get($dataRequested);
+        return $this->dtoService->getJson($user,$group);
+    }
+
+
 
 }
