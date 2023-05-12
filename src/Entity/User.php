@@ -45,19 +45,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:main'])]
     private ?UserData $userData = null;
 
-    #[ORM\ManyToMany(targetEntity: ProfesionalCategory::class, inversedBy: 'users')]
-    #[Groups(['user:main'])]
-    private Collection $profesional_category;
-
-    #[ORM\ManyToMany(targetEntity: Centre::class, inversedBy: 'users')]
-    #[Groups(['user:main'])]
-    private Collection $workplace;
-
     public function __construct()
-    {
-        $this->profesional_category = new ArrayCollection();
-        $this->workplace = new ArrayCollection();
-    }
+    { }
 
     public function getId(): ?int
     {
@@ -166,54 +155,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         $this->userData = $userData;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, ProfesionalCategory>
-     */
-    public function getProfesionalCategory(): Collection
-    {
-        return $this->profesional_category;
-    }
-
-    public function addProfesionalCategory(ProfesionalCategory $profesionalCategory): self
-    {
-        if (!$this->profesional_category->contains($profesionalCategory)) {
-            $this->profesional_category->add($profesionalCategory);
-        }
-
-        return $this;
-    }
-
-    public function removeProfesionalCategory(ProfesionalCategory $profesionalCategory): self
-    {
-        $this->profesional_category->removeElement($profesionalCategory);
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Centre>
-     */
-    public function getWorkplace(): Collection
-    {
-        return $this->workplace;
-    }
-
-    public function addWorkplace(Centre $workplace): self
-    {
-        if (!$this->workplace->contains($workplace)) {
-            $this->workplace->add($workplace);
-        }
-
-        return $this;
-    }
-
-    public function removeWorkplace(Centre $workplace): self
-    {
-        $this->workplace->removeElement($workplace);
 
         return $this;
     }
