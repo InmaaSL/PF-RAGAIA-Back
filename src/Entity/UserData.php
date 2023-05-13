@@ -21,7 +21,7 @@ class UserData
     private ?User $user = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:main'])]
+    #[Groups(['user:main', 'user:cpc'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]

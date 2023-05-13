@@ -16,7 +16,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:main'])]
+    #[Groups(['user:main', 'user:cpc'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -42,11 +42,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?bool $confirmed = null;
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
-    #[Groups(['user:main'])]
+    #[Groups(['user:main', 'user:cpc'])]
     private ?UserData $userData = null;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserProfessionalCategoryCentre::class)]
+    private Collection $userProfessionalCategoryCentres;
+
     public function __construct()
-    { }
+    {
+        $this->userProfessionalCategoryCentres = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -155,6 +160,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         $this->userData = $userData;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserProfessionalCategoryCentre>
+     */
+    public function getUserProfessionalCategoryCentres(): Collection
+    {
+        return $this->userProfessionalCategoryCentres;
+    }
+
+    public function addUserProfessionalCategoryCentre(UserProfessionalCategoryCentre $userProfessionalCategoryCentre): self
+    {
+        if (!$this->userProfessionalCategoryCentres->contains($userProfessionalCategoryCentre)) {
+            $this->userProfessionalCategoryCentres->add($userProfessionalCategoryCentre);
+            $userProfessionalCategoryCentre->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserProfessionalCategoryCentre(UserProfessionalCategoryCentre $userProfessionalCategoryCentre): self
+    {
+        if ($this->userProfessionalCategoryCentres->removeElement($userProfessionalCategoryCentre)) {
+            // set the owning side to null (unless already changed)
+            if ($userProfessionalCategoryCentre->getUser() === $this) {
+                $userProfessionalCategoryCentre->setUser(null);
+            }
+        }
 
         return $this;
     }

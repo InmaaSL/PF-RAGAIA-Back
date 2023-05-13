@@ -21,19 +21,22 @@ use JMS\Serializer\SerializerInterface;
 
 use App\Entity\User;
 use App\Entity\UserData;
-use App\Entity\ProfesionalCategory;
 use App\Entity\Centre;
-
+use App\Entity\ProfessionalCategory;
+use App\Entity\UserProfessionalCategoryCentre;
 use OpenApi\Annotations as OA;
 
 use App\Service\DtoService;
 use App\Service\RestService;
 
+use App\Repository\UserProfessionalCategoryCentreRepository;
 /**
  * @Route("/api", name="api_")
  */
 class RegistrationController extends BaseControllerWithExtras
 {
+
+    private $upccRepository;
 
     /**
      * MealsController constructor.
@@ -42,11 +45,13 @@ class RegistrationController extends BaseControllerWithExtras
     public function __construct(
         DtoService $dtoSvc,
         RestService $restService,
+        UserProfessionalCategoryCentreRepository $upccRepository
         // PermissionService $permissionSvc,
         ) {
         parent::__construct($restService, $dtoSvc);
         $this->restService = $restService;
         $this->dtoService = $dtoSvc;
+        $this->upccRepository = $upccRepository;
     }
 
     /**
@@ -192,16 +197,6 @@ class RegistrationController extends BaseControllerWithExtras
      *                  type="string"
      *              ),
      *              @OA\Property(
-     *                  property="centre",
-     *                  description="User workplace id",
-     *                  type="string"
-     *              ),
-     *              @OA\Property(
-     *                  property="profesional_category",
-     *                  description="User profesional category id",
-     *                  type="string"
-     *              ),
-     *              @OA\Property(
      *                  property="phone",
      *                  description="User phone",
      *                  type="string"
@@ -251,8 +246,6 @@ class RegistrationController extends BaseControllerWithExtras
 
         $em = $doctrine->getManager();
         $repositoryUserData = $doctrine->getRepository(UserData::class);
-        $repositoryProfesionalCategory = $doctrine->getRepository(ProfesionalCategory::class);
-        $repositoryCentre = $doctrine->getRepository(Centre::class);
 
         $message = "";
 
@@ -264,8 +257,6 @@ class RegistrationController extends BaseControllerWithExtras
             $surname = $request->get('surname');
             $email = $request->get('email');
             $dni = $request->get('dni');
-            // $centre = $request->get('centre');
-            // $profesionalCategory = $request->get('profesional_category');
             $phone = $request->get('phone');
             $address = $request->get('address');
             $town = $request->get('town');
@@ -284,14 +275,6 @@ class RegistrationController extends BaseControllerWithExtras
                     $newUser = true;
                     $userData = new UserData();
                 }
-
-                // if($profesionalCategory){
-                //     $profCategoryId = $repositoryProfesionalCategory->find($profesionalCategory);
-                // }
-
-                // if($centre){
-                //     $centreId = $repositoryCentre->find($centre);
-                // }
                 
                 if(!$newUser){
                     // Comprobamos si algun USER tienes ese email en concreto:
@@ -299,9 +282,6 @@ class RegistrationController extends BaseControllerWithExtras
                     
                     if(!$userExists || $userExists->getId() == $user->getId()){
                         $user->setEmail($email);
-                        // $user->addProfesionalCategory($profCategoryId ? $profCategoryId : '');
-                        // $user->addWorkplace($centreId ? $centreId : '');
-
                         $userData->setName($name);
                         $userData->setSurname($surname);
                         $userData->setEmail($email);
