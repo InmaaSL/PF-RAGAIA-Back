@@ -876,8 +876,8 @@ class UserController extends BaseControllerWithExtras
 
     /**
      * @Route(
-     *     "/setUserCenter/{user_id}",
-     *     name="Establish a user’s work center ",
+     *     "/setUserCentre/{user_id}",
+     *     name="Establish a user’s work centre ",
      *     methods={ "POST" },
      * )
      *
@@ -914,10 +914,10 @@ class UserController extends BaseControllerWithExtras
      *          mediaType="application/x-www-form-urlencoded",
      *          @OA\Schema(
      *              type="object",
-     *              required={"centerId"},
+     *              required={"centreId"},
      *              @OA\Property(
-     *                  property="centerId",
-     *                  description="Center ID",
+     *                  property="centreId",
+     *                  description="Centre ID",
      *                  type="string"
      *              )
      *          )
@@ -933,7 +933,7 @@ class UserController extends BaseControllerWithExtras
      * )
      * 
      */
-    public function setUserCenter(ManagerRegistry $doctrine, Request $request, $user_id)
+    public function setUserCentre(ManagerRegistry $doctrine, Request $request, $user_id)
     {
         
         $encoders = [new XmlEncoder(), new JsonEncoder()];
@@ -948,23 +948,23 @@ class UserController extends BaseControllerWithExtras
             
             $user = $doctrine->getRepository(User::class)->find($user_id);
 
-            $centerId = $request->get('centerId');
-            $center = $doctrine->getRepository(Centre::class)->find($centerId);
+            $centreId = $request->get('centreId');
+            $centre = $doctrine->getRepository(Centre::class)->find($centreId);
 
-            if($user instanceof User && $center instanceof Centre)
+            if($user instanceof User && $centre instanceof Centre)
             {
                 //Buscamos si este usuario ya está registrado en este centro: 
-                $searchUserCenter = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id, 'centre' => $centerId]);
+                $searchUserCentre = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id, 'centre' => $centreId]);
 
-                if(!$searchUserCenter){
-                    $newUserCenterRegistry = new UserProfessionalCategoryCentre();
-                    $newUserCenterRegistry->setUser($user);
-                    $newUserCenterRegistry->setCentre($center);
-                    $em->persist($newUserCenterRegistry);
+                if(!$searchUserCentre){
+                    $newUserCentreRegistry = new UserProfessionalCategoryCentre();
+                    $newUserCentreRegistry->setUser($user);
+                    $newUserCentreRegistry->setCentre($centre);
+                    $em->persist($newUserCentreRegistry);
                     $em->flush();
                 } else {
-                    foreach ($searchUserCenter as $key) {
-                        $newUserCenterRegistry = $key;
+                    foreach ($searchUserCentre as $key) {
+                        $newUserCentreRegistry = $key;
                     }
                 }
             }
@@ -972,7 +972,7 @@ class UserController extends BaseControllerWithExtras
             {
                 $code = 500;
                 $error = true;
-                $message = 'The center ID does not exits';
+                $message = 'The centre ID does not exits';
             }       
 
         } catch (Exception $ex) {
@@ -984,17 +984,17 @@ class UserController extends BaseControllerWithExtras
         $response = [
             'code' => $code,
             'error' => $error,
-            'data' => $code == 200 ? $newUserCenterRegistry : $message,
+            'data' => $code == 200 ? $newUserCentreRegistry : $message,
         ];
 
         $groups = ['user:cpc'];
-        return $this->dtoService->getJson($newUserCenterRegistry, $groups);
+        return $this->dtoService->getJson($newUserCentreRegistry, $groups);
     }
 
     /**
      * @Route(
-     *     "/setUserProfessionalCategoryCenter/{user_id}",
-     *     name="Establish a user’s work center ",
+     *     "/setUserProfessionalCategoryCentre/{user_id}",
+     *     name="Establish a user’s work centre ",
      *     methods={ "POST" },
      * )
      *
@@ -1031,10 +1031,10 @@ class UserController extends BaseControllerWithExtras
      *          mediaType="application/x-www-form-urlencoded",
      *          @OA\Schema(
      *              type="object",
-     *              required={"centerId"},
+     *              required={"centreId"},
      *              @OA\Property(
-     *                  property="centerId",
-     *                  description="Center ID",
+     *                  property="centreId",
+     *                  description="Centre ID",
      *                  type="string"
      *              ),
      *              @OA\Property(
@@ -1055,7 +1055,7 @@ class UserController extends BaseControllerWithExtras
      * )
      * 
      */
-    public function setUserProfessionalCategoryCenter(ManagerRegistry $doctrine, Request $request, $user_id)
+    public function setUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $user_id)
     {
         
         $encoders = [new XmlEncoder(), new JsonEncoder()];
@@ -1070,31 +1070,31 @@ class UserController extends BaseControllerWithExtras
             
             $user = $doctrine->getRepository(User::class)->find($user_id);
 
-            $centerId = $request->get('centerId');
-            $center = $doctrine->getRepository(Centre::class)->find($centerId);
+            $centreId = $request->get('centreId');
+            $centre = $doctrine->getRepository(Centre::class)->find($centreId);
 
             $professionalCategoryId = $request->get('professionalCategoryId');
             $professionalCategory = $doctrine->getRepository(ProfessionalCategory::class)->find($professionalCategoryId);
 
-            if($user instanceof User && $center instanceof Centre && $professionalCategory instanceof ProfessionalCategory)
+            if($user instanceof User && $centre instanceof Centre && $professionalCategory instanceof ProfessionalCategory)
             {
                 //Buscamos si este usuario ya esta registrado en este centro: 
-                $searchUserCenter = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id, 'centre' => $centerId]);
+                $searchUserCentre = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id, 'centre' => $centreId]);
 
-                if(!$searchUserCenter){
-                    $newUserCenterRegistry = new UserProfessionalCategoryCentre();
-                    $newUserCenterRegistry->setUser($user);
-                    $newUserCenterRegistry->setCentre($center);
-                    $newUserCenterRegistry->setProfessionalCategory($professionalCategory);
-                    $em->persist($newUserCenterRegistry);
+                if(!$searchUserCentre){
+                    $newUserCentreRegistry = new UserProfessionalCategoryCentre();
+                    $newUserCentreRegistry->setUser($user);
+                    $newUserCentreRegistry->setCentre($centre);
+                    $newUserCentreRegistry->setProfessionalCategory($professionalCategory);
+                    $em->persist($newUserCentreRegistry);
                 } else {
                     //Si está registrado en el centro comprobamos que categoría profesional tiene: 
-                    foreach ($searchUserCenter as $key) {
+                    foreach ($searchUserCentre as $key) {
                         if($key->getProfessionalCategory()->getId() != $professionalCategoryId){
                             //Si la categoria profesional es diferente a la que ha seleccionado ahora cambiamos la categoria del registro.
                             $key->setProfessionalCategory($professionalCategory);
                             $em->persist($key);
-                            $newUserCenterRegistry = $key;
+                            $newUserCentreRegistry = $key;
                         }
                     }
                 }
@@ -1104,7 +1104,7 @@ class UserController extends BaseControllerWithExtras
             {
                 $code = 500;
                 $error = true;
-                $message = 'The center ID does not exits';
+                $message = 'The centre ID does not exits';
             }       
 
         } catch (Exception $ex) {
@@ -1116,30 +1116,30 @@ class UserController extends BaseControllerWithExtras
         $response = [
             'code' => $code,
             'error' => $error,
-            'data' => $code == 200 ? $newUserCenterRegistry : $message,
+            'data' => $code == 200 ? $newUserCentreRegistry : $message,
         ];
 
         $groups = ['user:cpc'];
-        return $this->dtoService->getJson($newUserCenterRegistry, $groups);
+        return $this->dtoService->getJson($newUserCentreRegistry, $groups);
     }
 
 
     /**
      * @Route(
-     *     "/user/getUserCenterProfessionalCategory/{user_id}",
-     *     name="Get all user centers and professional categories",
+     *     "/user/getUserCentreProfessionalCategory/{user_id}",
+     *     name="Get all user centres and professional categories",
      *     methods={ "GET" },
      * )
      * 
      *
      * @OA\Response(
      *     response=500,
-     *     description="Error getting all user centers"
+     *     description="Error getting all user centres"
      * )
      *
      * @OA\Response(
      *     response="200",
-     *     description="All user centers retrieved",
+     *     description="All user centres retrieved",
      *     @OA\JsonContent(
      *         type="object",
      *         @OA\Property(property="code", type="integer", example="200"),
@@ -1166,7 +1166,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="UserData")
      */
-    public function getUserCenterProfessionalCategory(ManagerRegistry $doctrine, Request $request, $user_id)
+    public function getUserCentreProfessionalCategory(ManagerRegistry $doctrine, Request $request, $user_id)
     {
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
@@ -1181,15 +1181,15 @@ class UserController extends BaseControllerWithExtras
             $error = false;
             
             $registry = [];
-            $userCenters = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id]);
+            $userCentres = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id]);
     
-            foreach($userCenters as $us)
+            foreach($userCentres as $us)
             {
                 if($us instanceof UserProfessionalCategoryCentre)
                 {
                     $ar = array(
                         "id" => $us->getId(),
-                        "center" => $us->getCentre() ? $us->getCentre() : '',
+                        "centre" => $us->getCentre() ? $us->getCentre() : '',
                         "professionalCategory" => $us->getProfessionalCategory() ? $us->getProfessionalCategory() : ''
                     );
                     $registry[] = $ar;

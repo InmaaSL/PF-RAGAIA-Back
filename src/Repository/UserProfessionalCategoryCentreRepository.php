@@ -40,38 +40,6 @@ class UserProfessionalCategoryCentreRepository extends ServiceEntityRepository
         }
     }
 
-    public function findByUserCentreAndCategory($userId, $centreId, $categoryId)
-    {
-        $qb = $this->createQueryBuilder('upcc')
-            ->select('upcc')
-            ->join('upcc.user', 'u')
-            ->join('upcc.centre', 'c')
-            ->join('upcc.professionalCategory', 'pc')
-            ->where('u.id = :userId')
-            ->andWhere('c.id = :centreId')
-            ->andWhere('pc.id = :categoryId')
-            ->setParameter('userId', $userId)
-            ->setParameter('centreId', $centreId)
-            ->setParameter('categoryId', $categoryId);
-
-        return $qb->getQuery()->getOneOrNullResult();
-    }
-
-    public function getProfessionalCategoriesByUserAndCenter($userId, $centreId)
-    {
-        $qb = $this->createQueryBuilder('upcc');
-        $qb->select('upcc.id')
-            ->join('upcc.professionalCategory', 'pc')
-            ->where('upcc.user = :userId')
-            ->andWhere('upcc.centre = :centreId')
-            ->setParameters([
-                'userId' => $userId,
-                'centreId' => $centreId
-            ]);
-
-        return $qb->getQuery()->getResult();
-    }
-
 
 //    /**
 //     * @return UserProfessionalCategoryCentre[] Returns an array of UserProfessionalCategoryCentre objects
