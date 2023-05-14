@@ -14,11 +14,11 @@ class Centre
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc'])]
+    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc', 'user:main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc'])]
+    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc', 'user:main'])]
     private ?string $name = null;
 
     #[ORM\OneToMany(mappedBy: 'centre', targetEntity: UserProfessionalCategoryCentre::class)]

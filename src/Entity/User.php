@@ -46,6 +46,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?UserData $userData = null;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserProfessionalCategoryCentre::class)]
+    #[Groups(['user:main'])]
     private Collection $userProfessionalCategoryCentres;
 
     public function __construct()

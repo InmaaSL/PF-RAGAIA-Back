@@ -16,15 +16,15 @@ class UserProfessionalCategoryCentre
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'userProfessionalCategoryCentres')]
-    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc'])]
+    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc', 'user:main'])]
     private ?user $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'userProfessionalCategoryCentres')]
-    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc'])]
+    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc', 'user:main'])]
     private ?ProfessionalCategory $professionalCategory = null;
 
     #[ORM\ManyToOne(inversedBy: 'userProfessionalCategoryCentres')]
-    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc'])]
+    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc', 'user:main'])]
     private ?Centre $centre = null;
 
 
