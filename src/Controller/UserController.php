@@ -994,7 +994,7 @@ class UserController extends BaseControllerWithExtras
     /**
      * @Route(
      *     "/setUserProfessionalCategoryCentre/{user_id}",
-     *     name="Establish a user’s work centre ",
+     *     name="Establish a user’s work centre and professional category",
      *     methods={ "POST" },
      * )
      *
@@ -1090,7 +1090,7 @@ class UserController extends BaseControllerWithExtras
                 } else {
                     //Si está registrado en el centro comprobamos que categoría profesional tiene: 
                     foreach ($searchUserCentre as $key) {
-                        if($key->getProfessionalCategory()->getId() != $professionalCategoryId){
+                        if(!$key->getProfessionalCategory() || $key->getProfessionalCategory()->getId() != $professionalCategoryId){
                             //Si la categoria profesional es diferente a la que ha seleccionado ahora cambiamos la categoria del registro.
                             $key->setProfessionalCategory($professionalCategory);
                             $em->persist($key);
@@ -1120,7 +1120,139 @@ class UserController extends BaseControllerWithExtras
         ];
 
         $groups = ['user:cpc'];
-        return $this->dtoService->getJson($newUserCentreRegistry, $groups);
+        return $this->dtoService->getJson($response, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/updateUserProfessionalCategoryCentre/{register_id}",
+     *     name="Update a user’s work centre and professional category",
+     *     methods={ "POST" },
+     * )
+     *
+     * 
+     * @OA\Response(
+     *     response=500,
+     *     description="Error saving user data"
+     * )
+     * 
+     * @OA\Response(
+     *     response="200",
+     *     description="User data successfully saved",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="error", type="string", example="false"),
+     *         @OA\Property(property="data", type="integer", example=0),
+     *         @OA\Property(property="message", type="string", example="Error explanation")
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Invalid token",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     * @OA\RequestBody(
+     *      required=true,
+     *      @OA\MediaType(
+     *          mediaType="application/x-www-form-urlencoded",
+     *          @OA\Schema(
+     *              type="object",
+     *              required={"userId, centreId, professionalCategoryId"},
+     *              @OA\Property(
+     *                  property="userId",
+     *                  description="User ID",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="centreId",
+     *                  description="Centre ID",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="professionalCategoryId",
+     *                  description="Professional category ID",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="register_id",
+     *     in="path",
+     *     required=true,
+     *     description="User Id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     */
+    public function updateUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $register_id)
+    {
+        
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $em = $doctrine->getManager();
+
+        try {
+            $code = 200;
+            $error = false;
+            
+            $userId = $request->get('userId');
+            $user = $doctrine->getRepository(User::class)->find($userId);
+
+            $centreId = $request->get('centreId');
+            $centre = $doctrine->getRepository(Centre::class)->find($centreId);
+
+            $professionalCategoryId = $request->get('professionalCategoryId');
+            $professionalCategory = $doctrine->getRepository(ProfessionalCategory::class)->find($professionalCategoryId);
+
+            if($user instanceof User && $centre instanceof Centre)
+            {
+                
+                $searchUserCentre = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->find($register_id);
+                if($searchUserCentre){
+                    $searchUserCentre->setUser($user);
+                    $searchUserCentre->setCentre($centre);
+                    $searchUserCentre->setProfessionalCategory($professionalCategory);
+                    
+                    $em->persist($searchUserCentre);
+                    $em->flush();
+                } else {
+                    $code = 500;
+                    $error = true;
+                    $message = 'Something was wrong';    
+                }
+            }
+            else
+            {
+                $code = 500;
+                $error = true;
+                $message = 'Something was wrong';
+            }       
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to register the user - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,
+            'error' => $error,
+            'data' => $code == 200 ? $searchUserCentre : $message,
+        ];
+
+        $groups = ['user:cpc'];
+        return $this->dtoService->getJson($searchUserCentre, $groups);
     }
 
 
@@ -1212,6 +1344,90 @@ class UserController extends BaseControllerWithExtras
         return $this->dtoService->getJson($registry, $groups);
     }
 
+    /**
+     * @Route(
+     *     "/deleteUserProfessionalCategoryCentre/{register_id}",
+     *     name="Delete a user’s work centre and professional category",
+     *     methods={ "DELETE" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error deleting user data"
+     * )
+     * 
+     * @OA\Response(
+     *     response="200",
+     *     description="User data successfully deleted",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="error", type="string", example="false"),
+     *         @OA\Property(property="data", type="integer", example=0),
+     *         @OA\Property(property="message", type="string", example="Error explanation")
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Invalid token",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     *  
+     * @OA\Parameter(
+     *     name="register_id",
+     *     in="path",
+     *     required=true,
+     *     description="Register Id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     */
+    public function deleteUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $register_id)
+    {
+        
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
 
+        $em = $doctrine->getManager();
+
+        try {
+            $code = 200;
+            $error = false;
+            
+            //Buscamos el registro: 
+            $searchUserCentre = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->find($register_id);
+
+            if($searchUserCentre){
+                $em->remove($searchUserCentre);
+                $em->flush();
+                $message = "Deleted record";        
+            } else {
+                $code = 500;
+                $error = true;
+                $message = "An error has occurred trying to delete de record - Error: {$ex->getMessage()}";        
+            }
+        
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to delete de record - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,
+            'error' => $error,
+            'data' => $message,
+        ];
+
+        $groups = ['user:cpc'];
+        return $this->dtoService->getJson($response, $groups);
+    }
 
 }
