@@ -8,6 +8,8 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
 /**
  * @extends ServiceEntityRepository<User>
@@ -17,14 +19,14 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
  * @method User[]    findAll()
  * @method User[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
+class UserRepository extends ServiceEntityRepositoryCustom implements PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, ValidatorInterface $validator)
     {
-        parent::__construct($registry, User::class);
+        parent::__construct($registry, $validator, User::class);
     }
 
-    public function save(User $entity, bool $flush = false): void
+    public function add(User $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
 
@@ -90,4 +92,21 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+        public
+        function findAllPag($paginate, $sort, $filter) {
+            $entityName = parent::getEntityName();
+            $sortQ = $sort ? $this->buildOrder_Where("order", $sort) : "";
+            $filterQ = $filter ? $this->buildOrder_Where("where", $filter) : "";
+
+            $dql = parent::getEntityManager()->createQuery("SELECT ent FROM " . $entityName . " ent " . $filterQ . $sortQ)
+                ->setFirstResult($paginate["page"] * $paginate["count"])->setMaxResults($paginate["count"]);
+            $paginator = new Paginator($dql, true);
+            try {
+                return ["count" => count($paginator), "data" => $dql->getResult(), "dql" => $dql->getDQL()];
+            } catch (\Doctrine\ORM\Query\QueryException $e) {
+                throw new BadRequestHttpException($dql->getDQL());
+            }
+        }
+
 }

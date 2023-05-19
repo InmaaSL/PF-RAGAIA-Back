@@ -2,26 +2,26 @@
 
 namespace App\Repository;
 
-use App\Entity\ProfesionalCategory;
+use App\Entity\ProfessionalCategory;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<ProfesionalCategory>
+ * @extends ServiceEntityRepository<ProfessionalCategory>
  *
- * @method ProfesionalCategory|null find($id, $lockMode = null, $lockVersion = null)
- * @method ProfesionalCategory|null findOneBy(array $criteria, array $orderBy = null)
- * @method ProfesionalCategory[]    findAll()
- * @method ProfesionalCategory[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method ProfessionalCategory|null find($id, $lockMode = null, $lockVersion = null)
+ * @method ProfessionalCategory|null findOneBy(array $criteria, array $orderBy = null)
+ * @method ProfessionalCategory[]    findAll()
+ * @method ProfessionalCategory[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ProfesionalCategoryRepository extends ServiceEntityRepository
+class ProfessionalCategoryRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, ProfesionalCategory::class);
+        parent::__construct($registry, ProfessionalCategory::class);
     }
 
-    public function save(ProfesionalCategory $entity, bool $flush = false): void
+    public function save(ProfessionalCategory $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
 
@@ -30,7 +30,7 @@ class ProfesionalCategoryRepository extends ServiceEntityRepository
         }
     }
 
-    public function remove(ProfesionalCategory $entity, bool $flush = false): void
+    public function remove(ProfessionalCategory $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
 
@@ -40,7 +40,7 @@ class ProfesionalCategoryRepository extends ServiceEntityRepository
     }
 
 //    /**
-//     * @return ProfesionalCategory[] Returns an array of ProfesionalCategory objects
+//     * @return ProfessionalCategory[] Returns an array of ProfessionalCategory objects
 //     */
 //    public function findByExampleField($value): array
 //    {
@@ -54,7 +54,7 @@ class ProfesionalCategoryRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?ProfesionalCategory
+//    public function findOneBySomeField($value): ?ProfessionalCategory
 //    {
 //        return $this->createQueryBuilder('p')
 //            ->andWhere('p.exampleField = :val')

@@ -16,7 +16,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:main'])]
+    #[Groups(['user:main', 'user:cpc'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -42,21 +42,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?bool $confirmed = null;
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
-    #[Groups(['user:main'])]
+    #[Groups(['user:main', 'user:cpc'])]
     private ?UserData $userData = null;
 
-    #[ORM\ManyToMany(targetEntity: ProfesionalCategory::class, inversedBy: 'users')]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserProfessionalCategoryCentre::class)]
     #[Groups(['user:main'])]
-    private Collection $profesional_category;
-
-    #[ORM\ManyToMany(targetEntity: Centre::class, inversedBy: 'users')]
-    #[Groups(['user:main'])]
-    private Collection $workplace;
+    private Collection $userProfessionalCategoryCentres;
 
     public function __construct()
     {
-        $this->profesional_category = new ArrayCollection();
-        $this->workplace = new ArrayCollection();
+        $this->userProfessionalCategoryCentres = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -171,49 +166,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @return Collection<int, ProfesionalCategory>
+     * @return Collection<int, UserProfessionalCategoryCentre>
      */
-    public function getProfesionalCategory(): Collection
+    public function getUserProfessionalCategoryCentres(): Collection
     {
-        return $this->profesional_category;
+        return $this->userProfessionalCategoryCentres;
     }
 
-    public function addProfesionalCategory(ProfesionalCategory $profesionalCategory): self
+    public function addUserProfessionalCategoryCentre(UserProfessionalCategoryCentre $userProfessionalCategoryCentre): self
     {
-        if (!$this->profesional_category->contains($profesionalCategory)) {
-            $this->profesional_category->add($profesionalCategory);
+        if (!$this->userProfessionalCategoryCentres->contains($userProfessionalCategoryCentre)) {
+            $this->userProfessionalCategoryCentres->add($userProfessionalCategoryCentre);
+            $userProfessionalCategoryCentre->setUser($this);
         }
 
         return $this;
     }
 
-    public function removeProfesionalCategory(ProfesionalCategory $profesionalCategory): self
+    public function removeUserProfessionalCategoryCentre(UserProfessionalCategoryCentre $userProfessionalCategoryCentre): self
     {
-        $this->profesional_category->removeElement($profesionalCategory);
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Centre>
-     */
-    public function getWorkplace(): Collection
-    {
-        return $this->workplace;
-    }
-
-    public function addWorkplace(Centre $workplace): self
-    {
-        if (!$this->workplace->contains($workplace)) {
-            $this->workplace->add($workplace);
+        if ($this->userProfessionalCategoryCentres->removeElement($userProfessionalCategoryCentre)) {
+            // set the owning side to null (unless already changed)
+            if ($userProfessionalCategoryCentre->getUser() === $this) {
+                $userProfessionalCategoryCentre->setUser(null);
+            }
         }
-
-        return $this;
-    }
-
-    public function removeWorkplace(Centre $workplace): self
-    {
-        $this->workplace->removeElement($workplace);
 
         return $this;
     }

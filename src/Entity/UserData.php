@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\UserDataRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -21,7 +22,7 @@ class UserData
     private ?User $user = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:main'])]
+    #[Groups(['user:main', 'user:cpc'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
@@ -35,6 +36,38 @@ class UserData
     #[ORM\Column(length: 255)]
     #[Groups(['user:main'])]
     private ?string $email = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $phone = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $address = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $town = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $province = null;
+
+    #[ORM\Column(length: 10, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $postal_code = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?\DateTimeInterface $birth_date = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?\DateTimeInterface $admission_date = null;
+
+    #[ORM\ManyToOne(inversedBy: 'userdatas')]
+    #[Groups(['user:main'])]
+    private ?Custody $custody = null;
 
     public function getId(): ?int
     {
@@ -97,6 +130,102 @@ class UserData
     public function setEmail(string $email): self
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(?string $phone): self
+    {
+        $this->phone = $phone;
+
+        return $this;
+    }
+
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
+
+    public function setAddress(?string $address): self
+    {
+        $this->address = $address;
+
+        return $this;
+    }
+
+    public function getTown(): ?string
+    {
+        return $this->town;
+    }
+
+    public function setTown(?string $town): self
+    {
+        $this->town = $town;
+
+        return $this;
+    }
+
+    public function getProvince(): ?string
+    {
+        return $this->province;
+    }
+
+    public function setProvince(?string $province): self
+    {
+        $this->province = $province;
+
+        return $this;
+    }
+
+    public function getPostalCode(): ?string
+    {
+        return $this->postal_code;
+    }
+
+    public function setPostalCode(?string $postal_code): self
+    {
+        $this->postal_code = $postal_code;
+
+        return $this;
+    }
+
+    public function getBirthDate(): ?\DateTimeInterface
+    {
+        return $this->birth_date;
+    }
+
+    public function setBirthDate(?\DateTimeInterface $birth_date): self
+    {
+        $this->birth_date = $birth_date;
+
+        return $this;
+    }
+
+    public function getAdmissionDate(): ?\DateTimeInterface
+    {
+        return $this->admission_date;
+    }
+
+    public function setAdmissionDate(?\DateTimeInterface $admission_date): self
+    {
+        $this->admission_date = $admission_date;
+
+        return $this;
+    }
+
+    public function getCustody(): ?custody
+    {
+        return $this->custody;
+    }
+
+    public function setCustody(?custody $custody): self
+    {
+        $this->custody = $custody;
 
         return $this;
     }

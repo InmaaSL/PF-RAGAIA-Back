@@ -21,30 +21,41 @@ use JMS\Serializer\SerializerInterface;
 
 use App\Entity\User;
 use App\Entity\UserData;
-
+use App\Entity\Centre;
+use App\Entity\ProfessionalCategory;
+use App\Controller\Exception;
+use App\Entity\UserProfessionalCategoryCentre;
+use App\Repository\UserProfessionalCategoryCentreRepository;
 use OpenApi\Annotations as OA;
 
 use App\Service\DtoService;
 use App\Service\RestService;
-
+use App\Service\UserService;
 /**
  * @Route("/api", name="api_")
  */
 class UserController extends BaseControllerWithExtras
 {
 
+    private $userService;
+    private $userProfessionalCategoryCentreRepository;
     /**
      * MealsController constructor.
      * @param DtoService $dtoSvc
+     * @param UserService $userService
      */
     public function __construct(
         DtoService $dtoSvc,
         RestService $restService,
+        UserService $userService,
+        UserProfessionalCategoryCentreRepository $userProfessionalCategoryCentreRepository
         // PermissionService $permissionSvc,
         ) {
         parent::__construct($restService, $dtoSvc);
         $this->restService = $restService;
+        $this->userService = $userService;
         $this->dtoService = $dtoSvc;
+        $this->userProfessionalCategoryCentreRepository = $userProfessionalCategoryCentreRepository;
     }
 
     /**
@@ -83,8 +94,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="User")
      */
-    public function getUserInfo()
-    {
+    public function getUserInfo(){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -105,8 +115,14 @@ class UserController extends BaseControllerWithExtras
                 "surname" => $userData->getSurname(),
                 "dni" => $userData->getDni(),
                 "roles" => $user->getRoles(),
-                "centre" => $user->getWorkplace(),
-                "profesional_category" => $user->getProfesionalCategory()
+                "phone" => $userData->getPhone(),
+                "address" => $userData->getAddress(),
+                "town" => $userData->getTown(),
+                "province" => $userData->getProvince(),
+                "postal_code" => $userData->getPostalCode(),
+                "birth_date" => $userData->getBirthDate(),
+                "admission_date" => $userData->getAdmissionDate(),
+                "custody" => $userData->getCustody() ? $userData->getCustody()->getId() : '' ,
             );
 
         } catch (Exception $ex) {
@@ -162,8 +178,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="User")
      */
-    public function getCurrentUserId()
-    {
+    public function getCurrentUserId(){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         
@@ -224,18 +239,6 @@ class UserController extends BaseControllerWithExtras
      *         type="object",
      *         @OA\Property(property="code", type="integer", example="200"),
      *         @OA\Property(property="data", type="object",
-     *                  @OA\Property(property="userDataID", type="integer"),
-     *                  @OA\Property(property="name", type="string"),
-     *                  @OA\Property(property="surnames", type="string"),
-     *                  @OA\Property(property="nif", type="string"),
-     *                  @OA\Property(property="phone", type="string"),
-     *                  @OA\Property(property="address", type="string"),
-     *                  @OA\Property(property="postal_code", type="string"),
-     *                  @OA\Property(property="city", type="string"),
-     *                  @OA\Property(property="province", type="string"),
-     *                  @OA\Property(property="country", type="string"),
-     *                  @OA\Property(property="email", type="string"),
-     *                  @OA\Property(property="last_login", type="datetime"),
      *           )
      *     )
      * )
@@ -260,8 +263,7 @@ class UserController extends BaseControllerWithExtras
      * 
      * @OA\Tag(name="UserData")
      */
-    public function getUserData(ManagerRegistry $doctrine, $user_id=null)
-    {
+    public function getUserData(ManagerRegistry $doctrine, $user_id=null){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -286,21 +288,19 @@ class UserController extends BaseControllerWithExtras
                 {
                     $ar = array(
                         "userDataID" => $userData->getId() ? $userData->getId() : '',
+                        "roles" => $user->getRoles() ? $user->getRoles() : '',
                         "name" => $userData->getName() ? $userData->getName() : '',
                         "surname" => $userData->getSurname() ? $userData->getSurname() : '',
                         "dni" => $userData->getDni() ? $userData->getDni() : '',
-                        // "phone" => $userData->getPhoneNumber() ? $userData->getPhoneNumber() : '',
-                        // "address" => $userData->getAddress() ? $userData->getAddress() : '',
-                        // "postal_code" => $userData->getPostalCode() ? $userData->getPostalCode() : '',
-                        // "city" => $userData->getCity() ? $userData->getCity() : '',
-                        // "province" => $userData->getProvince() ? $userData->getProvince() : '',
-                        // "country" => $userData->getCountry() ? $userData->getCountry() : '',
                         "email" => $userData->getEmail() ? $userData->getEmail() : $userData->getUser()->getEmail(),
-                        "centre" => $user->getWorkplace(),
-                        "profesional_category" => $user->getProfesionalCategory()
-        
-                        // "last_login" => $userData->getLastLogin() ? $userData->getLastLogin() : ''
-
+                        "phone" => $userData->getPhone() ? $userData->getPhone() : '',
+                        "address" => $userData->getAddress() ? $userData->getAddress() : '',
+                        "town" => $userData->getTown() ? $userData->getTown() : '',
+                        "province" => $userData->getProvince() ? $userData->getProvince() : '',
+                        "postal_code" => $userData->getPostalCode() ? $userData->getPostalCode() : '',
+                        "birth_date" => $userData->getBirthDate() ? $userData->getBirthDate() : '',
+                        "admission_date" => $userData->getAdmissionDate() ? $userData->getAdmissionDate() : '',
+                        "custody" => $userData->getCustody() ? $userData->getCustody()->getId() : '',
                     );
                 }
                 else
@@ -328,7 +328,7 @@ class UserController extends BaseControllerWithExtras
         ];
 
         $groups = ["user:main"];
-        return $this->dtoService->getJson($response, $groups);
+        return $this->dtoService->getJson($ar, $groups);
     }
 
     /**
@@ -378,8 +378,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="UserData")
      */
-    public function getUsersData(ManagerRegistry $doctrine, Request $request, $role = null)
-    {
+    public function getUsersData(ManagerRegistry $doctrine, Request $request, $role = null){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -426,22 +425,17 @@ class UserController extends BaseControllerWithExtras
                             $ar = array(
                                 "id" => $us->getId(),
                                 "email" => $us->getEmail() ? $us->getEmail() : '',
-                                // "username" => $us->getUsername() ? $us->getUsername() : '',
                                 "roles" => $us->getRoles() ? $us->getRoles() : '',
                                 "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
                                 "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                // "phone_number" => $us->getUSerData()->getPhoneNumber() ? $us->getUSerData()->getPhoneNumber() : '',
-                                // "address" => $us->getUSerData()->getAddress() ? $us->getUSerData()->getAddress() : '',
-                                // "city" => $us->getUSerData()->getCity() ? $us->getUSerData()->getCity() : '',
-                                // "postal_code" => $us->getUSerData()->getPostalCode() ? $us->getUSerData()->getPostalCode() : '',
-                                // "province" => $us->getUSerData()->getProvince() ? $us->getUSerData()->getProvince() : '',
-                                // "country" => $us->getUSerData()->getCountry() ? $us->getUSerData()->getCountry() : '',
-                                "dni" => $us->getUserData()->getDni() ? $us->getUserData()->getDni() : '',
-                                // "last_login" => $us->getUSerData()->getLastlogin() ? $us->getUSerData()->getLastlogin() : '',
-                                "is_deleted" => $us->isDeleted() ? $us->isDeleted() : '',
-                                "centre" => $us->getWorkplace(),
-                                "profesional_category" => $us->getProfesionalCategory()
-                
+                                "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
+                                "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
+                                "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
+                                "province" => $us->getUserData()->getProvince() ? $us->getUserData()->getProvince() : '',
+                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : '',
+                                "birth_date" => $us->getUserData()->getBirthDate() ? $us->getUserData()->getBirthDate() : '',
+                                "admission_date" => $us->getUserData()->getAdmissionDate() ? $us->getUserData()->getAdmissionDate() : '',
+                                "custody" => $us->getUserData()->getCustody() ? $us->getUserData()->getCustody()->getId() : ''
                             );
                             $users[] = $ar;
                         }
@@ -458,25 +452,17 @@ class UserController extends BaseControllerWithExtras
                             $ar = array(
                                 "id" => $us->getId(),
                                 "email" => $us->getEmail() ? $us->getEmail() : '',
-                                // "username" => $us->getUsername() ? $us->getUsername() : '',
                                 "roles" => $us->getRoles() ? $us->getRoles() : '',
                                 "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
-                                // "name" => $uUSerData->getName(),
                                 "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                // "surname" => $uUSerData->getSurname(),
-                                // "phone_number" => $us->getUSerData()->getPhoneNumber() ? $us->getUSerData()->getPhoneNumber() : '',
-                                //"phone_number" => $uUSerData->getPhoneNumber(),
-                                // "address" => $us->getUSerData()->getAddress() ? $us->getUSerData()->getAddress() : '',
-                                // "city" => $us->getUSerData()->getCity() ? $us->getUSerData()->getCity() : '',
-                                // "postal_code" => $us->getUSerData()->getPostalCode() ? $us->getUSerData()->getPostalCode() : '',
-                                // "province" => $us->getUSerData()->getProvince() ? $us->getUSerData()->getProvince() : '',
-                                // "country" => $us->getUSerData()->getCountry() ? $us->getUSerData()->getCountry() : '',
-                                "dni" => $us->getUserData()->getDni() ? $us->getUserData()->getDni() : '',
-                                // "last_login" => $us->getUSerData()->getLastlogin() ? $us->getUSerData()->getLastlogin() : '',
-                                "is_deleted" => $us->isDeleted() ? $us->isDeleted() : '',
-                                "centre" => $us->getWorkplace(),
-                                "profesional_category" => $us->getProfesionalCategory()
-                
+                                "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
+                                "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
+                                "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
+                                "province" => $us->getUserData()->getProvince() ? $us->getUserData()->getProvince() : '',
+                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : ''                ,
+                                "birth_date" => $us->getUserData()->getBirthDate() ? $us->getUserData()->getBirthDate() : '',
+                                "admission_date" => $us->getUserData()->getAdmissionDate() ? $us->getUserData()->getAdmissionDate() : '',
+                                "custody" => $us->getUserData()->getCustody() ? $us->getUserData()->getCustody()->getId() : ''
                             );
                             $users[] = $ar;
                         }
@@ -506,7 +492,7 @@ class UserController extends BaseControllerWithExtras
      * @Route(
      *     "/user/delete/{id}",
      *     name="Delete user by id",
-     *     methods={ "DELETE" },
+     *     methods={ "POST" },
      * )
      *
      * @OA\Response(
@@ -547,8 +533,7 @@ class UserController extends BaseControllerWithExtras
      * @OA\Tag(name="User")
      */
     
-    public function removeUser(ManagerRegistry $doctrine, $id)
-    {
+    public function removeUser(ManagerRegistry $doctrine, $id){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
 
@@ -598,6 +583,842 @@ class UserController extends BaseControllerWithExtras
         ];
 
         return $this->dtoService->getJson($response);
+    }
+
+    /**
+     * @Route(
+     *     "/getProfessionalCategories",
+     *     name="Get all the professional categories",
+     *     methods={ "GET" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error getting all the professional categories"
+     * )
+     *
+     * @OA\Response(
+     *     response="200",
+     *     description="Get all the professional categories",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="userDataID", type="integer"),
+     *           )
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Authentication error",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     *
+     * @OA\Tag(name="User")
+     */
+    public function getProfessionalCategories(ManagerRegistry $doctrine){
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $message = "";
+
+        try {
+            $code = 200;
+            $error = false;
+
+            $professionalCategoriesArray = [];
+
+            $professionalCategories = $doctrine->getRepository(ProfessionalCategory::class)->findAll();
+
+            foreach($professionalCategories as $pc)
+            {
+                if($pc instanceof ProfessionalCategory)
+                {
+                    $ar = array(
+                        "id" => $pc->getId(),
+                        "name" => $pc->getName() ? $pc->getName() : '',
+                    );
+                    $professionalCategoriesArray[] = $ar;
+                }
+            }
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to get my user info - Error: {$ex->getMessage()}";
+        }
+
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($professionalCategoriesArray, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/getCentres",
+     *     name="Get all centres",
+     *     methods={ "GET" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error getting all centres"
+     * )
+     *
+     * @OA\Response(
+     *     response="200",
+     *     description="Get all centres",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="userDataID", type="integer"),
+     *           )
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Authentication error",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     *
+     * @OA\Tag(name="User")
+     */
+    public function getCentres(ManagerRegistry $doctrine){
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $message = "";
+
+        try {
+            $code = 200;
+            $error = false;
+
+            $centresArray = [];
+
+            $centres = $doctrine->getRepository(Centre::class)->findAll();
+
+            foreach($centres as $c)
+            {
+                if($c instanceof Centre)
+                {
+                    $ar = array(
+                        "id" => $c->getId(),
+                        "name" => $c->getName() ? $c->getName() : '',
+                    );
+                    $centresArray[] = $ar;
+                }
+            }
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to get my user info - Error: {$ex->getMessage()}";
+        }
+
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($centresArray, $groups);
+
+    }
+
+    /**
+     * @Route(
+     *     "/v2/user",
+     *     name="users",
+     *     methods={ "GET" },
+     * )
+     */
+    public function getUsers() {
+        $group = ["user:main"];
+
+        $users = $this->userService->getAll();
+        return $this->dtoService->getJson($users,$group);
+    }
+
+    /**
+     * @Route(
+     *     "/v2/worker",
+     *     name="workers",
+     *     methods={ "GET" },
+     * )
+     */
+    public function getWorkers() {
+        $group = ["user:main"];
+
+        $users = $this->userService->getAllWorkers();
+        return $this->dtoService->getJson($users,$group);
+    }
+
+    /**
+     * @Route(
+     *     "/v2/nna/{id}",
+     *     name="nns",
+     *     methods={ "GET" },
+     * )
+     * @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     required=true,
+     *     description="User id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="c",
+     *     in="query",
+     *     required=false,
+     *     description="Count",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * * @OA\Parameter(
+     *     name="p",
+     *     in="query",
+     *     required=false,
+     *     description="Page",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="s",
+     *     in="query",
+     *     required=false,
+     *     description="Sort",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="f",
+     *     in="query",
+     *     required=false,
+     *     description="Filter",
+     *     @OA\Schema(type="string")
+     * )
+     */
+    public function getAllNNA(Request $request, $id) {
+        $group = ["user:main"];
+
+        $dataRequested = $this->restService->getRequestedData($request);
+        $users = $this->userService->getAllNNA($dataRequested);
+        return $this->dtoService->getJson($users,$group);
+    }
+
+    /**
+     * @Route(
+     *     "/v2/user/{id}",
+     *     name="userInfo",
+     *     methods={ "GET" },
+     * )
+     * 
+     * * @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     required=true,
+     *     description="User id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="c",
+     *     in="query",
+     *     required=false,
+     *     description="Count",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * * @OA\Parameter(
+     *     name="p",
+     *     in="query",
+     *     required=false,
+     *     description="Page",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="s",
+     *     in="query",
+     *     required=false,
+     *     description="Sort",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="f",
+     *     in="query",
+     *     required=false,
+     *     description="Filter",
+     *     @OA\Schema(type="string")
+     * )
+     */
+    public function getUsersPaginated(Request $request, $id) {
+        $group = ["user:main"];
+        
+        $dataRequested = $this->restService->getRequestedData($request);
+        $user = $this->userService->get($dataRequested);
+        return $this->dtoService->getJson($user,$group);
+    }
+
+    /**
+     * @Route(
+     *     "/setUserCentre/{user_id}",
+     *     name="Establish a user’s work centre ",
+     *     methods={ "POST" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error saving user data"
+     * )
+     * 
+     * @OA\Response(
+     *     response="200",
+     *     description="User data successfully saved",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="error", type="string", example="false"),
+     *         @OA\Property(property="data", type="integer", example=0),
+     *         @OA\Property(property="message", type="string", example="Error explanation")
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Invalid token",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     * @OA\RequestBody(
+     *      required=true,
+     *      @OA\MediaType(
+     *          mediaType="application/x-www-form-urlencoded",
+     *          @OA\Schema(
+     *              type="object",
+     *              required={"centreId"},
+     *              @OA\Property(
+     *                  property="centreId",
+     *                  description="Centre ID",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="user_id",
+     *     in="path",
+     *     required=true,
+     *     description="User Id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     */
+    public function setUserCentre(ManagerRegistry $doctrine, Request $request, $user_id)
+    {
+        
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $em = $doctrine->getManager();
+
+        try {
+            $code = 200;
+            $error = false;
+            
+            $user = $doctrine->getRepository(User::class)->find($user_id);
+
+            $centreId = $request->get('centreId');
+            $centre = $doctrine->getRepository(Centre::class)->find($centreId);
+
+            if($user instanceof User && $centre instanceof Centre)
+            {
+                //Buscamos si este usuario ya está registrado en este centro: 
+                $searchUserCentre = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id, 'centre' => $centreId]);
+
+                if(!$searchUserCentre){
+                    $newUserCentreRegistry = new UserProfessionalCategoryCentre();
+                    $newUserCentreRegistry->setUser($user);
+                    $newUserCentreRegistry->setCentre($centre);
+                    $em->persist($newUserCentreRegistry);
+                    $em->flush();
+                } else {
+                    foreach ($searchUserCentre as $key) {
+                        $newUserCentreRegistry = $key;
+                    }
+                }
+            }
+            else
+            {
+                $code = 500;
+                $error = true;
+                $message = 'The centre ID does not exits';
+            }       
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to register the user - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,
+            'error' => $error,
+            'data' => $code == 200 ? $newUserCentreRegistry : $message,
+        ];
+
+        $groups = ['user:cpc'];
+        return $this->dtoService->getJson($newUserCentreRegistry, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/setUserProfessionalCategoryCentre/{user_id}",
+     *     name="Establish a user’s work centre and professional category",
+     *     methods={ "POST" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error saving user data"
+     * )
+     * 
+     * @OA\Response(
+     *     response="200",
+     *     description="User data successfully saved",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="error", type="string", example="false"),
+     *         @OA\Property(property="data", type="integer", example=0),
+     *         @OA\Property(property="message", type="string", example="Error explanation")
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Invalid token",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     * @OA\RequestBody(
+     *      required=true,
+     *      @OA\MediaType(
+     *          mediaType="application/x-www-form-urlencoded",
+     *          @OA\Schema(
+     *              type="object",
+     *              required={"centreId"},
+     *              @OA\Property(
+     *                  property="centreId",
+     *                  description="Centre ID",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="professionalCategoryId",
+     *                  description="Professional category ID",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="user_id",
+     *     in="path",
+     *     required=true,
+     *     description="User Id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     */
+    public function setUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $user_id){
+        
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $em = $doctrine->getManager();
+
+        try {
+            $code = 200;
+            $error = false;
+            
+            $user = $doctrine->getRepository(User::class)->find($user_id);
+
+            $centreId = $request->get('centreId');
+            $centre = $doctrine->getRepository(Centre::class)->find($centreId);
+
+            $professionalCategoryId = $request->get('professionalCategoryId');
+            $professionalCategory = $doctrine->getRepository(ProfessionalCategory::class)->find($professionalCategoryId);
+
+            if($user instanceof User && $centre instanceof Centre && $professionalCategory instanceof ProfessionalCategory)
+            {
+                //Buscamos si este usuario ya esta registrado en este centro: 
+                $searchUserCentre = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id, 'centre' => $centreId]);
+
+                if(!$searchUserCentre){
+                    $newUserCentreRegistry = new UserProfessionalCategoryCentre();
+                    $newUserCentreRegistry->setUser($user);
+                    $newUserCentreRegistry->setCentre($centre);
+                    $newUserCentreRegistry->setProfessionalCategory($professionalCategory);
+                    $em->persist($newUserCentreRegistry);
+                } else {
+                    //Si está registrado en el centro comprobamos que categoría profesional tiene: 
+                    foreach ($searchUserCentre as $key) {
+                        if(!$key->getProfessionalCategory() || $key->getProfessionalCategory()->getId() != $professionalCategoryId){
+                            //Si la categoria profesional es diferente a la que ha seleccionado ahora cambiamos la categoria del registro.
+                            $key->setProfessionalCategory($professionalCategory);
+                            $em->persist($key);
+                            $newUserCentreRegistry = $key;
+                        }
+                    }
+                }
+                $em->flush();
+            }
+            else
+            {
+                $code = 500;
+                $error = true;
+                $message = 'The centre ID does not exits';
+            }       
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to register the user - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,
+            'error' => $error,
+            'data' => $code == 200 ? $newUserCentreRegistry : $message,
+        ];
+
+        $groups = ['user:cpc'];
+        return $this->dtoService->getJson($response, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/updateUserProfessionalCategoryCentre/{register_id}",
+     *     name="Update a user’s work centre and professional category",
+     *     methods={ "POST" },
+     * )
+     *
+     * 
+     * @OA\Response(
+     *     response=500,
+     *     description="Error saving user data"
+     * )
+     * 
+     * @OA\Response(
+     *     response="200",
+     *     description="User data successfully saved",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="error", type="string", example="false"),
+     *         @OA\Property(property="data", type="integer", example=0),
+     *         @OA\Property(property="message", type="string", example="Error explanation")
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Invalid token",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     * @OA\RequestBody(
+     *      required=true,
+     *      @OA\MediaType(
+     *          mediaType="application/x-www-form-urlencoded",
+     *          @OA\Schema(
+     *              type="object",
+     *              required={"userId, centreId, professionalCategoryId"},
+     *              @OA\Property(
+     *                  property="userId",
+     *                  description="User ID",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="centreId",
+     *                  description="Centre ID",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="professionalCategoryId",
+     *                  description="Professional category ID",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="register_id",
+     *     in="path",
+     *     required=true,
+     *     description="User Id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     */
+    public function updateUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $register_id){
+        
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $em = $doctrine->getManager();
+
+        try {
+            $code = 200;
+            $error = false;
+            
+            $userId = $request->get('userId');
+            $user = $doctrine->getRepository(User::class)->find($userId);
+
+            $centreId = $request->get('centreId');
+            $centre = $doctrine->getRepository(Centre::class)->find($centreId);
+
+            $professionalCategoryId = $request->get('professionalCategoryId');
+            $professionalCategory = $doctrine->getRepository(ProfessionalCategory::class)->find($professionalCategoryId);
+
+            if($user instanceof User && $centre instanceof Centre)
+            {
+                
+                $searchUserCentre = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->find($register_id);
+                if($searchUserCentre){
+                    $searchUserCentre->setUser($user);
+                    $searchUserCentre->setCentre($centre);
+                    $searchUserCentre->setProfessionalCategory($professionalCategory);
+                    
+                    $em->persist($searchUserCentre);
+                    $em->flush();
+                } else {
+                    $code = 500;
+                    $error = true;
+                    $message = 'Something was wrong';    
+                }
+            }
+            else
+            {
+                $code = 500;
+                $error = true;
+                $message = 'Something was wrong';
+            }       
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to register the user - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,
+            'error' => $error,
+            'data' => $code == 200 ? $searchUserCentre : $message,
+        ];
+
+        $groups = ['user:cpc'];
+        return $this->dtoService->getJson($searchUserCentre, $groups);
+    }
+
+
+    /**
+     * @Route(
+     *     "/user/getUserCentreProfessionalCategory/{user_id}",
+     *     name="Get all user centres and professional categories",
+     *     methods={ "GET" },
+     * )
+     * 
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error getting all user centres"
+     * )
+     *
+     * @OA\Response(
+     *     response="200",
+     *     description="All user centres retrieved",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Authentication error",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     * @OA\Parameter(
+     *      name="user_id",
+     *      in="path",
+     *      description="User id to filter",
+     *      required=false,
+     *      @OA\Schema(type="string")
+     * )
+     *
+     * @OA\Tag(name="UserData")
+     */
+    public function getUserCentreProfessionalCategory(ManagerRegistry $doctrine, Request $request, $user_id){
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $em = $doctrine->getManager();
+        
+        $message = "";
+        
+        try {
+            $code = 200;
+            $error = false;
+            
+            $registry = [];
+            $userCentres = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id]);
+    
+            foreach($userCentres as $us)
+            {
+                if($us instanceof UserProfessionalCategoryCentre)
+                {
+                    $ar = array(
+                        "id" => $us->getId(),
+                        "centre" => $us->getCentre() ? $us->getCentre() : '',
+                        "professionalCategory" => $us->getProfessionalCategory() ? $us->getProfessionalCategory() : ''
+                    );
+                    $registry[] = $ar;
+                }
+            }
+    
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to get the user data - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,
+            'error' => $error,
+            'data' => $code == 200 ? $registry : $message,
+        ];
+
+        $groups = ["userProfessionalCategoryCentre:main"];
+        return $this->dtoService->getJson($registry, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/deleteUserProfessionalCategoryCentre/{register_id}",
+     *     name="Delete a user’s work centre and professional category",
+     *     methods={ "DELETE" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error deleting user data"
+     * )
+     * 
+     * @OA\Response(
+     *     response="200",
+     *     description="User data successfully deleted",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="error", type="string", example="false"),
+     *         @OA\Property(property="data", type="integer", example=0),
+     *         @OA\Property(property="message", type="string", example="Error explanation")
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Invalid token",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     *  
+     * @OA\Parameter(
+     *     name="register_id",
+     *     in="path",
+     *     required=true,
+     *     description="Register Id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     */
+    public function deleteUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $register_id){
+        
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $em = $doctrine->getManager();
+
+        try {
+            $code = 200;
+            $error = false;
+            
+            //Buscamos el registro: 
+            $searchUserCentre = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->find($register_id);
+
+            if($searchUserCentre){
+                $em->remove($searchUserCentre);
+                $em->flush();
+                $message = "Deleted record";        
+            } else {
+                $code = 500;
+                $error = true;
+                $message = "An error has occurred trying to delete de record - Error: {$ex->getMessage()}";        
+            }
+        
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to delete de record - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,
+            'error' => $error,
+            'data' => $message,
+        ];
+
+        $groups = ['user:cpc'];
+        return $this->dtoService->getJson($response, $groups);
     }
 
 }

@@ -21,19 +21,25 @@ use JMS\Serializer\SerializerInterface;
 
 use App\Entity\User;
 use App\Entity\UserData;
-use App\Entity\ProfesionalCategory;
 use App\Entity\Centre;
-
+use App\Entity\Custody;
+use App\Entity\ProfessionalCategory;
+use App\Entity\UserProfessionalCategoryCentre;
 use OpenApi\Annotations as OA;
 
 use App\Service\DtoService;
 use App\Service\RestService;
 
+use DateTime;
+
+use App\Repository\UserProfessionalCategoryCentreRepository;
 /**
  * @Route("/api", name="api_")
  */
 class RegistrationController extends BaseControllerWithExtras
 {
+
+    private $upccRepository;
 
     /**
      * MealsController constructor.
@@ -42,11 +48,13 @@ class RegistrationController extends BaseControllerWithExtras
     public function __construct(
         DtoService $dtoSvc,
         RestService $restService,
+        UserProfessionalCategoryCentreRepository $upccRepository
         // PermissionService $permissionSvc,
         ) {
         parent::__construct($restService, $dtoSvc);
         $this->restService = $restService;
         $this->dtoService = $dtoSvc;
+        $this->upccRepository = $upccRepository;
     }
 
     /**
@@ -87,19 +95,18 @@ class RegistrationController extends BaseControllerWithExtras
      * )
      *
      */
-    public function register(ManagerRegistry $doctrine, Request $request, UserPasswordHasherInterface $passwordHasher): Response
-    {
+    public function register(ManagerRegistry $doctrine, Request $request, UserPasswordHasherInterface $passwordHasher): Response{
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
 
         $em = $doctrine->getManager();
 
-        $email = $request->request->get('email');
-        $password = $request->request->get('password');
+        $email = $request->get('email');
+        $password = $request->get('password');
 
-        $datos = $request->getContent();
-        $parameters = json_decode($request->getContent(), true);
+        // $datos = $request->getContent();
+        // $parameters = json_decode($request->getContent(), true);
 
         $user = new User();
         $user->setEmail($email);
@@ -192,15 +199,45 @@ class RegistrationController extends BaseControllerWithExtras
      *                  type="string"
      *              ),
      *              @OA\Property(
-     *                  property="centre",
-     *                  description="User workplace id",
+     *                  property="phone",
+     *                  description="User phone",
      *                  type="string"
      *              ),
      *              @OA\Property(
-     *                  property="profesional_category",
-     *                  description="User profesional category id",
+     *                  property="address",
+     *                  description="User address",
      *                  type="string"
      *              ),
+     *              @OA\Property(
+     *                  property="town",
+     *                  description="town",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="province",
+     *                  description="User province",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="postal_code",
+     *                  description="User postal code",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="birth_date",
+     *                  description="Date of Birth",
+     *                  type="date"
+     *              ),
+     *              @OA\Property(
+     *                  property="admission_date",
+     *                  description="Date of Admission",
+     *                  type="date"
+     *              ),
+     *              @OA\Property(
+     *                  property="custody_id",
+     *                  description="Custody id",
+     *                  type="string"
+     *              )
      *          )
      *      )
      * )
@@ -214,8 +251,7 @@ class RegistrationController extends BaseControllerWithExtras
      * )
      * 
      */
-    public function registerUserData(ManagerRegistry $doctrine, Request $request, $user_id)
-    {
+    public function registerUserData(ManagerRegistry $doctrine, Request $request, $user_id){
         
         $repositoryUser = $doctrine->getRepository(User::class);
         $user = $repositoryUser->find($user_id);
@@ -226,8 +262,6 @@ class RegistrationController extends BaseControllerWithExtras
 
         $em = $doctrine->getManager();
         $repositoryUserData = $doctrine->getRepository(UserData::class);
-        $repositoryProfesionalCategory = $doctrine->getRepository(ProfesionalCategory::class);
-        $repositoryCentre = $doctrine->getRepository(Centre::class);
 
         $message = "";
 
@@ -235,12 +269,24 @@ class RegistrationController extends BaseControllerWithExtras
             $code = 200;
             $error = false;
             
-            $name = $request->request->get('name');
-            $surname = $request->request->get('surname');
-            $email = $request->request->get('email');
-            $dni = $request->request->get('dni');
-            $centre = $request->request->get('centre');
-            $profesionalCategory = $request->request->get('profesional_category');
+            $name = $request->get('name');
+            $surname = $request->get('surname');
+            $email = $request->get('email');
+            $dni = $request->get('dni');
+            $phone = $request->get('phone');
+            $address = $request->get('address');
+            $town = $request->get('town');
+            $province = $request->get('province');
+            $postal_code = $request->get('postal_code');
+            $birth_date = $request->get('birth_date');
+            $admission_date = $request->get('admission_date');
+            $custody_id = $request->get('custody_id');
+
+            if($custody_id){
+                $custody = $doctrine->getRepository(Custody::class)->find($custody_id);
+            } else {
+                $custody = null;
+            }
 
             $user = $repositoryUser->find($user_id);
 
@@ -253,14 +299,6 @@ class RegistrationController extends BaseControllerWithExtras
                     $newUser = true;
                     $userData = new UserData();
                 }
-
-                if($profesionalCategory){
-                    $profCategoryId = $repositoryProfesionalCategory->find($profesionalCategory);
-                }
-
-                if($centre){
-                    $centreId = $repositoryCentre->find($centre);
-                }
                 
                 if(!$newUser){
                     // Comprobamos si algun USER tienes ese email en concreto:
@@ -268,13 +306,18 @@ class RegistrationController extends BaseControllerWithExtras
                     
                     if(!$userExists || $userExists->getId() == $user->getId()){
                         $user->setEmail($email);
-                        $user->addProfesionalCategory($profCategoryId ? $profCategoryId : '');
-                        $user->addWorkplace($centreId ? $centreId : '');
-
                         $userData->setName($name);
                         $userData->setSurname($surname);
                         $userData->setEmail($email);
                         $userData->setDni($dni);
+                        $userData->setPhone($phone ? $phone : '');
+                        $userData->setAddress($address ? $address : '');
+                        $userData->setTown($town ? $town : '');
+                        $userData->setProvince($province ? $province : '');
+                        $userData->setPostalCode($postal_code ? $postal_code : '');
+                        $userData->setBirthDate($birth_date ? new DateTime($birth_date) : null);
+                        $userData->setAdmissionDate($admission_date ? new DateTime($admission_date) : null);
+                        $userData->setCustody($custody);
 
                         $code = 200;
                         $error = false;
@@ -289,10 +332,17 @@ class RegistrationController extends BaseControllerWithExtras
                     if(!$userDataExists){
                         $userData->setUser($user);
                         $userData->setName($name);
-                        $userData->setSurname($surnames);
+                        $userData->setSurname($surname);
                         $userData->setDni($dni);
                         $userData->setEmail($email);
-
+                        $userData->setPhone($phone ? $phone : '');
+                        $userData->setAddress($address ? $address : '');
+                        $userData->setTown($town ? $town : '');
+                        $userData->setProvince($province ? $province : '');
+                        $userData->setPostalCode($postal_code ? $postal_code : '');
+                        $userData->setBirthDate($birth_date ? new DateTime($birth_date) : '');
+                        $userData->setAdmissionDate($admission_date ? new DateTime($admission_date) : '');
+                        $userData->setCustody($custody ? $custody : '');
                     } else {
                         $code = 500;
                         $error = true;

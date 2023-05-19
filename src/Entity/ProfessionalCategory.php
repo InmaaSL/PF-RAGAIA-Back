@@ -2,26 +2,26 @@
 
 namespace App\Entity;
 
-use App\Repository\CentreRepository;
+use App\Repository\ProfessionalCategoryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-#[ORM\Entity(repositoryClass: CentreRepository::class)]
-class Centre
+#[ORM\Entity(repositoryClass: ProfessionalCategoryRepository::class)]
+class ProfessionalCategory
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc', 'user:main'])]
+    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc','user:main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc', 'user:main'])]
     private ?string $name = null;
 
-    #[ORM\OneToMany(mappedBy: 'centre', targetEntity: UserProfessionalCategoryCentre::class)]
+    #[ORM\OneToMany(mappedBy: 'professionalCategory', targetEntity: UserProfessionalCategoryCentre::class)]
     private Collection $userProfessionalCategoryCentres;
 
     public function __construct()
@@ -58,7 +58,7 @@ class Centre
     {
         if (!$this->userProfessionalCategoryCentres->contains($userProfessionalCategoryCentre)) {
             $this->userProfessionalCategoryCentres->add($userProfessionalCategoryCentre);
-            $userProfessionalCategoryCentre->setCentre($this);
+            $userProfessionalCategoryCentre->setProfessionalCategory($this);
         }
 
         return $this;
@@ -68,8 +68,8 @@ class Centre
     {
         if ($this->userProfessionalCategoryCentres->removeElement($userProfessionalCategoryCentre)) {
             // set the owning side to null (unless already changed)
-            if ($userProfessionalCategoryCentre->getCentre() === $this) {
-                $userProfessionalCategoryCentre->setCentre(null);
+            if ($userProfessionalCategoryCentre->getProfessionalCategory() === $this) {
+                $userProfessionalCategoryCentre->setProfessionalCategory(null);
             }
         }
 
