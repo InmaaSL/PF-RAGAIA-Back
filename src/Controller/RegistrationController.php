@@ -22,12 +22,15 @@ use JMS\Serializer\SerializerInterface;
 use App\Entity\User;
 use App\Entity\UserData;
 use App\Entity\Centre;
+use App\Entity\Custody;
 use App\Entity\ProfessionalCategory;
 use App\Entity\UserProfessionalCategoryCentre;
 use OpenApi\Annotations as OA;
 
 use App\Service\DtoService;
 use App\Service\RestService;
+
+use DateTime;
 
 use App\Repository\UserProfessionalCategoryCentreRepository;
 /**
@@ -92,8 +95,7 @@ class RegistrationController extends BaseControllerWithExtras
      * )
      *
      */
-    public function register(ManagerRegistry $doctrine, Request $request, UserPasswordHasherInterface $passwordHasher): Response
-    {
+    public function register(ManagerRegistry $doctrine, Request $request, UserPasswordHasherInterface $passwordHasher): Response{
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -103,8 +105,8 @@ class RegistrationController extends BaseControllerWithExtras
         $email = $request->get('email');
         $password = $request->get('password');
 
-        $datos = $request->getContent();
-        $parameters = json_decode($request->getContent(), true);
+        // $datos = $request->getContent();
+        // $parameters = json_decode($request->getContent(), true);
 
         $user = new User();
         $user->setEmail($email);
@@ -220,6 +222,21 @@ class RegistrationController extends BaseControllerWithExtras
      *                  property="postal_code",
      *                  description="User postal code",
      *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="birth_date",
+     *                  description="Date of Birth",
+     *                  type="date"
+     *              ),
+     *              @OA\Property(
+     *                  property="admission_date",
+     *                  description="Date of Admission",
+     *                  type="date"
+     *              ),
+     *              @OA\Property(
+     *                  property="custody_id",
+     *                  description="Custody id",
+     *                  type="string"
      *              )
      *          )
      *      )
@@ -234,8 +251,7 @@ class RegistrationController extends BaseControllerWithExtras
      * )
      * 
      */
-    public function registerUserData(ManagerRegistry $doctrine, Request $request, $user_id)
-    {
+    public function registerUserData(ManagerRegistry $doctrine, Request $request, $user_id){
         
         $repositoryUser = $doctrine->getRepository(User::class);
         $user = $repositoryUser->find($user_id);
@@ -262,7 +278,15 @@ class RegistrationController extends BaseControllerWithExtras
             $town = $request->get('town');
             $province = $request->get('province');
             $postal_code = $request->get('postal_code');
+            $birth_date = $request->get('birth_date');
+            $admission_date = $request->get('admission_date');
+            $custody_id = $request->get('custody_id');
 
+            if($custody_id){
+                $custody = $doctrine->getRepository(Custody::class)->find($custody_id);
+            } else {
+                $custody = null;
+            }
 
             $user = $repositoryUser->find($user_id);
 
@@ -291,6 +315,9 @@ class RegistrationController extends BaseControllerWithExtras
                         $userData->setTown($town ? $town : '');
                         $userData->setProvince($province ? $province : '');
                         $userData->setPostalCode($postal_code ? $postal_code : '');
+                        $userData->setBirthDate($birth_date ? new DateTime($birth_date) : null);
+                        $userData->setAdmissionDate($admission_date ? new DateTime($admission_date) : null);
+                        $userData->setCustody($custody);
 
                         $code = 200;
                         $error = false;
@@ -313,7 +340,9 @@ class RegistrationController extends BaseControllerWithExtras
                         $userData->setTown($town ? $town : '');
                         $userData->setProvince($province ? $province : '');
                         $userData->setPostalCode($postal_code ? $postal_code : '');
-
+                        $userData->setBirthDate($birth_date ? new DateTime($birth_date) : '');
+                        $userData->setAdmissionDate($admission_date ? new DateTime($admission_date) : '');
+                        $userData->setCustody($custody ? $custody : '');
                     } else {
                         $code = 500;
                         $error = true;

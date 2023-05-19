@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\UserDataRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -55,6 +56,18 @@ class UserData
     #[ORM\Column(length: 10, nullable: true)]
     #[Groups(['user:main'])]
     private ?string $postal_code = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?\DateTimeInterface $birth_date = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?\DateTimeInterface $admission_date = null;
+
+    #[ORM\ManyToOne(inversedBy: 'userdatas')]
+    #[Groups(['user:main'])]
+    private ?Custody $custody = null;
 
     public function getId(): ?int
     {
@@ -177,6 +190,42 @@ class UserData
     public function setPostalCode(?string $postal_code): self
     {
         $this->postal_code = $postal_code;
+
+        return $this;
+    }
+
+    public function getBirthDate(): ?\DateTimeInterface
+    {
+        return $this->birth_date;
+    }
+
+    public function setBirthDate(?\DateTimeInterface $birth_date): self
+    {
+        $this->birth_date = $birth_date;
+
+        return $this;
+    }
+
+    public function getAdmissionDate(): ?\DateTimeInterface
+    {
+        return $this->admission_date;
+    }
+
+    public function setAdmissionDate(?\DateTimeInterface $admission_date): self
+    {
+        $this->admission_date = $admission_date;
+
+        return $this;
+    }
+
+    public function getCustody(): ?custody
+    {
+        return $this->custody;
+    }
+
+    public function setCustody(?custody $custody): self
+    {
+        $this->custody = $custody;
 
         return $this;
     }

@@ -94,8 +94,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="User")
      */
-    public function getUserInfo()
-    {
+    public function getUserInfo(){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -116,14 +115,14 @@ class UserController extends BaseControllerWithExtras
                 "surname" => $userData->getSurname(),
                 "dni" => $userData->getDni(),
                 "roles" => $user->getRoles(),
-                // "centre" => $user->getWorkplace(),
-                // "professional_category" => $user->getProfessionalCategory(),
                 "phone" => $userData->getPhone(),
                 "address" => $userData->getAddress(),
                 "town" => $userData->getTown(),
                 "province" => $userData->getProvince(),
                 "postal_code" => $userData->getPostalCode(),
-                
+                "birth_date" => $userData->getBirthDate(),
+                "admission_date" => $userData->getAdmissionDate(),
+                "custody" => $userData->getCustody() ? $userData->getCustody()->getId() : '' ,
             );
 
         } catch (Exception $ex) {
@@ -179,8 +178,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="User")
      */
-    public function getCurrentUserId()
-    {
+    public function getCurrentUserId(){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         
@@ -265,8 +263,7 @@ class UserController extends BaseControllerWithExtras
      * 
      * @OA\Tag(name="UserData")
      */
-    public function getUserData(ManagerRegistry $doctrine, $user_id=null)
-    {
+    public function getUserData(ManagerRegistry $doctrine, $user_id=null){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -296,13 +293,14 @@ class UserController extends BaseControllerWithExtras
                         "surname" => $userData->getSurname() ? $userData->getSurname() : '',
                         "dni" => $userData->getDni() ? $userData->getDni() : '',
                         "email" => $userData->getEmail() ? $userData->getEmail() : $userData->getUser()->getEmail(),
-                        // "centre" => $user->getWorkplace() ? $user->getWorkplace() : '',
-                        // "professional_category" => $user->getProfessionalCategory() ? $user->getProfessionalCategory() : '',
                         "phone" => $userData->getPhone() ? $userData->getPhone() : '',
                         "address" => $userData->getAddress() ? $userData->getAddress() : '',
                         "town" => $userData->getTown() ? $userData->getTown() : '',
                         "province" => $userData->getProvince() ? $userData->getProvince() : '',
-                        "postal_code" => $userData->getPostalCode() ? $userData->getPostalCode() : ''
+                        "postal_code" => $userData->getPostalCode() ? $userData->getPostalCode() : '',
+                        "birth_date" => $userData->getBirthDate() ? $userData->getBirthDate() : '',
+                        "admission_date" => $userData->getAdmissionDate() ? $userData->getAdmissionDate() : '',
+                        "custody" => $userData->getCustody() ? $userData->getCustody()->getId() : '',
                     );
                 }
                 else
@@ -380,8 +378,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="UserData")
      */
-    public function getUsersData(ManagerRegistry $doctrine, Request $request, $role = null)
-    {
+    public function getUsersData(ManagerRegistry $doctrine, Request $request, $role = null){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -431,14 +428,14 @@ class UserController extends BaseControllerWithExtras
                                 "roles" => $us->getRoles() ? $us->getRoles() : '',
                                 "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
                                 "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                // "centre" => $us->getWorkplace() ? $us->getWorkplace() : '',
-                                // "professional_category" => $us->getProfessionalCategory() ? $us->getProfessionalCategory() : '',
                                 "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
                                 "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
                                 "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
                                 "province" => $us->getUserData()->getProvince() ? $us->getUserData()->getProvince() : '',
-                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : ''
-                
+                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : '',
+                                "birth_date" => $us->getUserData()->getBirthDate() ? $us->getUserData()->getBirthDate() : '',
+                                "admission_date" => $us->getUserData()->getAdmissionDate() ? $us->getUserData()->getAdmissionDate() : '',
+                                "custody" => $us->getUserData()->getCustody() ? $us->getUserData()->getCustody()->getId() : ''
                             );
                             $users[] = $ar;
                         }
@@ -458,13 +455,14 @@ class UserController extends BaseControllerWithExtras
                                 "roles" => $us->getRoles() ? $us->getRoles() : '',
                                 "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
                                 "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                // "centre" => $us->getWorkplace() ? $us->getWorkplace() : '',
-                                // "professional_category" => $us->getProfessionalCategory() ? $us->getProfessionalCategory() : '',
                                 "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
                                 "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
                                 "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
                                 "province" => $us->getUserData()->getProvince() ? $us->getUserData()->getProvince() : '',
-                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : ''                
+                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : ''                ,
+                                "birth_date" => $us->getUserData()->getBirthDate() ? $us->getUserData()->getBirthDate() : '',
+                                "admission_date" => $us->getUserData()->getAdmissionDate() ? $us->getUserData()->getAdmissionDate() : '',
+                                "custody" => $us->getUserData()->getCustody() ? $us->getUserData()->getCustody()->getId() : ''
                             );
                             $users[] = $ar;
                         }
@@ -535,8 +533,7 @@ class UserController extends BaseControllerWithExtras
      * @OA\Tag(name="User")
      */
     
-    public function removeUser(ManagerRegistry $doctrine, $id)
-    {
+    public function removeUser(ManagerRegistry $doctrine, $id){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
 
@@ -624,8 +621,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="User")
      */
-    public function getProfessionalCategories(ManagerRegistry $doctrine)
-    {
+    public function getProfessionalCategories(ManagerRegistry $doctrine){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -698,8 +694,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="User")
      */
-    public function getCentres(ManagerRegistry $doctrine)
-    {
+    public function getCentres(ManagerRegistry $doctrine){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -1055,8 +1050,7 @@ class UserController extends BaseControllerWithExtras
      * )
      * 
      */
-    public function setUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $user_id)
-    {
+    public function setUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $user_id){
         
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
@@ -1193,8 +1187,7 @@ class UserController extends BaseControllerWithExtras
      * )
      * 
      */
-    public function updateUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $register_id)
-    {
+    public function updateUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $register_id){
         
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
@@ -1298,8 +1291,7 @@ class UserController extends BaseControllerWithExtras
      *
      * @OA\Tag(name="UserData")
      */
-    public function getUserCentreProfessionalCategory(ManagerRegistry $doctrine, Request $request, $user_id)
-    {
+    public function getUserCentreProfessionalCategory(ManagerRegistry $doctrine, Request $request, $user_id){
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
@@ -1388,8 +1380,7 @@ class UserController extends BaseControllerWithExtras
      * )
      * 
      */
-    public function deleteUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $register_id)
-    {
+    public function deleteUserProfessionalCategoryCentre(ManagerRegistry $doctrine, Request $request, $register_id){
         
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
