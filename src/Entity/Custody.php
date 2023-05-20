@@ -14,14 +14,15 @@ class Custody
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:main'])]
+    #[Groups(['user:main'], ['custody:main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:main'], ['custody:main'])]
     private ?string $name = null;
 
     #[ORM\OneToMany(mappedBy: 'custody', targetEntity: Userdata::class)]
-    #[Groups(['user:main'])]
+    // #[Groups(['user:main'], ['custody:main'])]
     private Collection $userdatas;
 
     public function __construct()

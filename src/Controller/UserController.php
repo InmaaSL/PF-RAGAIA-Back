@@ -23,6 +23,7 @@ use App\Entity\User;
 use App\Entity\UserData;
 use App\Entity\Centre;
 use App\Entity\ProfessionalCategory;
+use App\Entity\Custody;
 use App\Controller\Exception;
 use App\Entity\UserProfessionalCategoryCentre;
 use App\Repository\UserProfessionalCategoryCentreRepository;
@@ -106,24 +107,6 @@ class UserController extends BaseControllerWithExtras
             $error = false;
 
             $user = $this->getUser();
-            $userData = $user->getUserData();
-
-            $ar = array(
-                "id" => $user->getId(),
-                "email" => $user->getEmail(),
-                "name" => $userData->getName(),
-                "surname" => $userData->getSurname(),
-                "dni" => $userData->getDni(),
-                "roles" => $user->getRoles(),
-                "phone" => $userData->getPhone(),
-                "address" => $userData->getAddress(),
-                "town" => $userData->getTown(),
-                "province" => $userData->getProvince(),
-                "postal_code" => $userData->getPostalCode(),
-                "birth_date" => $userData->getBirthDate(),
-                "admission_date" => $userData->getAdmissionDate(),
-                "custody" => $userData->getCustody() ? $userData->getCustody()->getId() : '' ,
-            );
 
         } catch (Exception $ex) {
             $code = 500;
@@ -134,11 +117,11 @@ class UserController extends BaseControllerWithExtras
         $response = [
             'code' => $code,
             'error' => $error,
-            'data' => $code == 200 ? $ar : $message,
+            'data' => $code == 200 ? $user : $message,
         ];
 
         $groups = ["user:main"];
-        return $this->dtoService->getJson($response, $groups);
+        return $this->dtoService->getJson($user, $groups);
 
     }
 
@@ -191,13 +174,13 @@ class UserController extends BaseControllerWithExtras
             $error = false;
 
             $id = $this->getUser()->getId();
-            if($id) {
-                $ar = array(
-                    "id" => $id
-                );
-            } else {
-                    $ar = null;
-            }
+            // if($id) {
+            //     $ar = array(
+            //         "id" => $id
+            //     );
+            // } else {
+            //         $ar = null;
+            // }
 
         } catch (Exception $ex) {
             $code = 500;
@@ -208,10 +191,10 @@ class UserController extends BaseControllerWithExtras
         $response = [
             'code' => $code,
             'error' => $error,
-            'data' => $code == 200 ? $ar : $message,
+            'data' => $code == 200 ? $id : $message,
         ];
 
-        return $this->dtoService->getJson($response);
+        return $this->dtoService->getJson($id);
     }
 
     /**
@@ -284,28 +267,8 @@ class UserController extends BaseControllerWithExtras
             if($user instanceof User)
             {
                 $userData = $user->getUserData();
-                if($userData)
-                {
-                    $ar = array(
-                        "userDataID" => $userData->getId() ? $userData->getId() : '',
-                        "roles" => $user->getRoles() ? $user->getRoles() : '',
-                        "name" => $userData->getName() ? $userData->getName() : '',
-                        "surname" => $userData->getSurname() ? $userData->getSurname() : '',
-                        "dni" => $userData->getDni() ? $userData->getDni() : '',
-                        "email" => $userData->getEmail() ? $userData->getEmail() : $userData->getUser()->getEmail(),
-                        "phone" => $userData->getPhone() ? $userData->getPhone() : '',
-                        "address" => $userData->getAddress() ? $userData->getAddress() : '',
-                        "town" => $userData->getTown() ? $userData->getTown() : '',
-                        "province" => $userData->getProvince() ? $userData->getProvince() : '',
-                        "postal_code" => $userData->getPostalCode() ? $userData->getPostalCode() : '',
-                        "birth_date" => $userData->getBirthDate() ? $userData->getBirthDate() : '',
-                        "admission_date" => $userData->getAdmissionDate() ? $userData->getAdmissionDate() : '',
-                        "custody" => $userData->getCustody() ? $userData->getCustody()->getId() : '',
-                    );
-                }
-                else
-                {
-                    $ar = null;
+                if(!$userData){
+                    $userData = null;
                 }
             }
             else
@@ -324,11 +287,11 @@ class UserController extends BaseControllerWithExtras
         $response = [
             'code' => $code,
             'error' => $error,
-            'data' => $code == 200 ? $ar : $message,
+            'data' => $code == 200 ? $userData : $message,
         ];
 
         $groups = ["user:main"];
-        return $this->dtoService->getJson($ar, $groups);
+        return $this->dtoService->getJson($userData, $groups);
     }
 
     /**
@@ -415,60 +378,9 @@ class UserController extends BaseControllerWithExtras
                     $role = "ROLE_NNA";
                 }
 
-                $uUsers = $repositoryUser->getAllByRole($role);
-    
-                foreach($uUsers as $us)
-                {
-                    if($us instanceof User)
-                    {
-                        if($us->getUserData()){
-                            $ar = array(
-                                "id" => $us->getId(),
-                                "email" => $us->getEmail() ? $us->getEmail() : '',
-                                "roles" => $us->getRoles() ? $us->getRoles() : '',
-                                "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
-                                "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
-                                "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
-                                "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
-                                "province" => $us->getUserData()->getProvince() ? $us->getUserData()->getProvince() : '',
-                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : '',
-                                "birth_date" => $us->getUserData()->getBirthDate() ? $us->getUserData()->getBirthDate() : '',
-                                "admission_date" => $us->getUserData()->getAdmissionDate() ? $us->getUserData()->getAdmissionDate() : '',
-                                "custody" => $us->getUserData()->getCustody() ? $us->getUserData()->getCustody()->getId() : ''
-                            );
-                            $users[] = $ar;
-                        }
-                    }
-                }
-            } else {
-                $uUsers = $repositoryUser->findAll();
-    
-                foreach($uUsers as $us)
-                {
-                    if($us instanceof User)
-                    {
-                        if($us->getUserData()){
-                            $ar = array(
-                                "id" => $us->getId(),
-                                "email" => $us->getEmail() ? $us->getEmail() : '',
-                                "roles" => $us->getRoles() ? $us->getRoles() : '',
-                                "name" => $us->getUserData()->getName() ? $us->getUserData()->getName() : '',
-                                "surname" => $us->getUserData()->getSurname() ? $us->getUserData()->getSurname() : '',
-                                "phone" => $us->getUserData()->getPhone() ? $us->getUserData()->getPhone() : '',
-                                "address" => $us->getUserData()->getAddress() ? $us->getUserData()->getAddress() : '',
-                                "town" => $us->getUserData()->getTown() ? $us->getUserData()->getTown() : '',
-                                "province" => $us->getUserData()->getProvince() ? $us->getUserData()->getProvince() : '',
-                                "postal_code" => $us->getUserData()->getPostalCode() ? $us->getUserData()->getPostalCode() : ''                ,
-                                "birth_date" => $us->getUserData()->getBirthDate() ? $us->getUserData()->getBirthDate() : '',
-                                "admission_date" => $us->getUserData()->getAdmissionDate() ? $us->getUserData()->getAdmissionDate() : '',
-                                "custody" => $us->getUserData()->getCustody() ? $us->getUserData()->getCustody()->getId() : ''
-                            );
-                            $users[] = $ar;
-                        }
-                    }
-                }
-    
+                $users = $repositoryUser->getAllByRole($role);
+                } else {
+                $users = $repositoryUser->findAll();    
             }
 
         } catch (Exception $ex) {
@@ -484,7 +396,7 @@ class UserController extends BaseControllerWithExtras
         ];
 
         $groups = ["user:main"];
-        return $this->dtoService->getJson($response, $groups);
+        return $this->dtoService->getJson($users, $groups);
 
     }
 
@@ -636,18 +548,6 @@ class UserController extends BaseControllerWithExtras
 
             $professionalCategories = $doctrine->getRepository(ProfessionalCategory::class)->findAll();
 
-            foreach($professionalCategories as $pc)
-            {
-                if($pc instanceof ProfessionalCategory)
-                {
-                    $ar = array(
-                        "id" => $pc->getId(),
-                        "name" => $pc->getName() ? $pc->getName() : '',
-                    );
-                    $professionalCategoriesArray[] = $ar;
-                }
-            }
-
         } catch (Exception $ex) {
             $code = 500;
             $error = true;
@@ -655,7 +555,7 @@ class UserController extends BaseControllerWithExtras
         }
 
         $groups = ["user:main"];
-        return $this->dtoService->getJson($professionalCategoriesArray, $groups);
+        return $this->dtoService->getJson($professionalCategories, $groups);
     }
 
     /**
@@ -709,17 +609,64 @@ class UserController extends BaseControllerWithExtras
 
             $centres = $doctrine->getRepository(Centre::class)->findAll();
 
-            foreach($centres as $c)
-            {
-                if($c instanceof Centre)
-                {
-                    $ar = array(
-                        "id" => $c->getId(),
-                        "name" => $c->getName() ? $c->getName() : '',
-                    );
-                    $centresArray[] = $ar;
-                }
-            }
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to get my user info - Error: {$ex->getMessage()}";
+        }
+
+        $groups = ["user:main"];
+        return $this->dtoService->getJson($centres, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/getCustodies",
+     *     name="Get all the custody type",
+     *     methods={ "GET" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error getting all the custody type"
+     * )
+     *
+     * @OA\Response(
+     *     response="200",
+     *     description="Get all the custody types",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="userDataID", type="integer"),
+     *           )
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Authentication error",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     *
+     * @OA\Tag(name="User")
+     */
+    public function getCustodies(ManagerRegistry $doctrine){
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $message = "";
+
+        try {
+            $code = 200;
+            $error = false;
+
+            $custodyTypes= $doctrine->getRepository(Custody::class)->findAll();
 
         } catch (Exception $ex) {
             $code = 500;
@@ -728,9 +675,9 @@ class UserController extends BaseControllerWithExtras
         }
 
         $groups = ["user:main"];
-        return $this->dtoService->getJson($centresArray, $groups);
-
+        return $this->dtoService->getJson($custodyTypes, $groups);
     }
+
 
     /**
      * @Route(
@@ -1306,20 +1253,7 @@ class UserController extends BaseControllerWithExtras
             
             $registry = [];
             $userCentres = $doctrine->getRepository(UserProfessionalCategoryCentre::class)->findBy(['user' => $user_id]);
-    
-            foreach($userCentres as $us)
-            {
-                if($us instanceof UserProfessionalCategoryCentre)
-                {
-                    $ar = array(
-                        "id" => $us->getId(),
-                        "centre" => $us->getCentre() ? $us->getCentre() : '',
-                        "professionalCategory" => $us->getProfessionalCategory() ? $us->getProfessionalCategory() : ''
-                    );
-                    $registry[] = $ar;
-                }
-            }
-    
+        
         } catch (Exception $ex) {
             $code = 500;
             $error = true;
@@ -1329,11 +1263,11 @@ class UserController extends BaseControllerWithExtras
         $response = [
             'code' => $code,
             'error' => $error,
-            'data' => $code == 200 ? $registry : $message,
+            'data' => $code == 200 ? $userCentres : $message,
         ];
 
         $groups = ["userProfessionalCategoryCentre:main"];
-        return $this->dtoService->getJson($registry, $groups);
+        return $this->dtoService->getJson($userCentres, $groups);
     }
 
     /**

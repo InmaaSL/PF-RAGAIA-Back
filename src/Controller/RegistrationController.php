@@ -237,6 +237,11 @@ class RegistrationController extends BaseControllerWithExtras
      *                  property="custody_id",
      *                  description="Custody id",
      *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="case_number",
+     *                  description="Case number",
+     *                  type="string"
      *              )
      *          )
      *      )
@@ -281,6 +286,7 @@ class RegistrationController extends BaseControllerWithExtras
             $birth_date = $request->get('birth_date');
             $admission_date = $request->get('admission_date');
             $custody_id = $request->get('custody_id');
+            $case_number = $request->get('case_number');
 
             if($custody_id){
                 $custody = $doctrine->getRepository(Custody::class)->find($custody_id);
@@ -318,6 +324,7 @@ class RegistrationController extends BaseControllerWithExtras
                         $userData->setBirthDate($birth_date ? new DateTime($birth_date) : null);
                         $userData->setAdmissionDate($admission_date ? new DateTime($admission_date) : null);
                         $userData->setCustody($custody);
+                        $userData->setCaseNumber($case_number);
 
                         $code = 200;
                         $error = false;
@@ -343,6 +350,7 @@ class RegistrationController extends BaseControllerWithExtras
                         $userData->setBirthDate($birth_date ? new DateTime($birth_date) : '');
                         $userData->setAdmissionDate($admission_date ? new DateTime($admission_date) : '');
                         $userData->setCustody($custody ? $custody : '');
+                        $userData->setCaseNumber($case_number);
                     } else {
                         $code = 500;
                         $error = true;

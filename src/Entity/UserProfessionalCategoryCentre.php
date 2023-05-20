@@ -13,6 +13,7 @@ class UserProfessionalCategoryCentre
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['userProfessionalCategoryCentre:main', 'user:cpc', 'user:main'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'userProfessionalCategoryCentres')]
