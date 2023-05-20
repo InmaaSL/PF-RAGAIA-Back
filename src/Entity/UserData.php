@@ -66,8 +66,12 @@ class UserData
     private ?\DateTimeInterface $admission_date = null;
 
     #[ORM\ManyToOne(inversedBy: 'userdatas')]
-    #[Groups(['user:main'])]
+    #[Groups(['user:main'], ['custody:main'])]
     private ?Custody $custody = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    #[Groups(['user:main'])]
+    private ?string $case_number = null;
 
     public function getId(): ?int
     {
@@ -226,6 +230,18 @@ class UserData
     public function setCustody(?custody $custody): self
     {
         $this->custody = $custody;
+
+        return $this;
+    }
+
+    public function getCaseNumber(): ?string
+    {
+        return $this->case_number;
+    }
+
+    public function setCaseNumber(?string $case_number): self
+    {
+        $this->case_number = $case_number;
 
         return $this;
     }
