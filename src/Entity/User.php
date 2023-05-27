@@ -16,7 +16,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:main', 'user:cpc'])]
+    #[Groups(['user:main', 'user:cpc', 'expedient:main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -49,9 +49,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:main'])]
     private Collection $userProfessionalCategoryCentres;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Expedient::class)]
+    private Collection $expedients;
+
     public function __construct()
     {
         $this->userProfessionalCategoryCentres = new ArrayCollection();
+        $this->expedients = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -189,6 +193,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($userProfessionalCategoryCentre->getUser() === $this) {
                 $userProfessionalCategoryCentre->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Expedient>
+     */
+    public function getExpedients(): Collection
+    {
+        return $this->expedients;
+    }
+
+    public function addExpedient(Expedient $expedient): self
+    {
+        if (!$this->expedients->contains($expedient)) {
+            $this->expedients->add($expedient);
+            $expedient->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeExpedient(Expedient $expedient): self
+    {
+        if ($this->expedients->removeElement($expedient)) {
+            // set the owning side to null (unless already changed)
+            if ($expedient->getUser() === $this) {
+                $expedient->setUser(null);
             }
         }
 
