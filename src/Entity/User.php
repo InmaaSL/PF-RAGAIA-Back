@@ -42,7 +42,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?bool $confirmed = null;
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
-    #[Groups(['user:main', 'user:cpc','healthRecord:main'])]
+    #[Groups(['user:main', 'user:cpc','healthRecord:main', 'educationRecord:main'])]
     private ?UserData $userData = null;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserProfessionalCategoryCentre::class)]
@@ -64,6 +64,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: EducationDocument::class, orphanRemoval: true)]
     private Collection $educationDocuments;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: EducationRecord::class, orphanRemoval: true)]
+    private Collection $educationRecords;
+
+    #[ORM\OneToMany(mappedBy: 'worker', targetEntity: EducationRecord::class, orphanRemoval: true)]
+    private Collection $workerEducationRecords;
+
     public function __construct()
     {
         $this->userProfessionalCategoryCentres = new ArrayCollection();
@@ -72,6 +78,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->workerHealthRecords = new ArrayCollection();
         $this->healthDocuments = new ArrayCollection();
         $this->educationDocuments = new ArrayCollection();
+        $this->educationRecords = new ArrayCollection();
+        $this->workerEducationRecords = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -359,6 +367,66 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($educationDocument->getUser() === $this) {
                 $educationDocument->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EducationRecord>
+     */
+    public function getEducationRecords(): Collection
+    {
+        return $this->educationRecords;
+    }
+
+    public function addEducationRecord(EducationRecord $educationRecord): self
+    {
+        if (!$this->educationRecords->contains($educationRecord)) {
+            $this->educationRecords->add($educationRecord);
+            $educationRecord->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEducationRecord(EducationRecord $educationRecord): self
+    {
+        if ($this->educationRecords->removeElement($educationRecord)) {
+            // set the owning side to null (unless already changed)
+            if ($educationRecord->getUser() === $this) {
+                $educationRecord->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EducationRecord>
+     */
+    public function getWorkerEducationRecords(): Collection
+    {
+        return $this->workerEducationRecords;
+    }
+
+    public function addWorkerEducationRecord(EducationRecord $workerEducationRecord): self
+    {
+        if (!$this->workerEducationRecords->contains($workerEducationRecord)) {
+            $this->workerEducationRecords->add($workerEducationRecord);
+            $workerEducationRecord->setWorker($this);
+        }
+
+        return $this;
+    }
+
+    public function removeWorkerEducationRecord(EducationRecord $workerEducationRecord): self
+    {
+        if ($this->workerEducationRecords->removeElement($workerEducationRecord)) {
+            // set the owning side to null (unless already changed)
+            if ($workerEducationRecord->getWorker() === $this) {
+                $workerEducationRecord->setWorker(null);
             }
         }
 

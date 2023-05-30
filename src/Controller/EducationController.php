@@ -19,18 +19,22 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Security\Core\Security;
+use App\Controller\Exception;
+
+use OpenApi\Annotations as OA;
 
 use App\Entity\User;
-use App\Controller\Exception;
 use App\Entity\EducationDocument;
+use App\Entity\EducationRecord;
 use App\Repository\EducationDocumentRepository;
-use OpenApi\Annotations as OA;
+use App\Repository\EducationRecordRepository;
 
 use App\Service\PermissionService;
 use App\Service\DtoService;
 use App\Service\RestService;
 use App\Service\FileUploader;
 use App\Service\EducationDocumentService;
+use App\Service\EducationRecordService;
 
 use DateTime;
 
@@ -41,22 +45,26 @@ class EducationController extends BaseControllerWithExtras
 {
 
     private $educationDocumentService;
+    private $educationRecordService;
 
         /**
      * MealsController constructor.
      * @param DtoService $dtoSvc
      * @param EducationDocumentService $educationDocumentService
+     * @param EducationRecordService $educationRecordService
      * 
      */
     public function __construct(
         DtoService $dtoSvc,
         RestService $restService,
-        EducationDocumentService $educationDocumentService
+        EducationDocumentService $educationDocumentService,
+        EducationRecordService $educationRecordService
         ) {
         parent::__construct($restService, $dtoSvc, $educationDocumentService);
         $this->restService = $restService;
         $this->dtoService = $dtoSvc;
         $this->educationDocumentService = $educationDocumentService;
+        $this->educationRecordService = $educationRecordService;
     }
 
     /**
@@ -444,6 +452,397 @@ class EducationController extends BaseControllerWithExtras
         $document = $this->educationDocumentService->get($dataRequested);
         return $this->dtoService->getJson($document,$group);
     }
+
+    /**
+     * @Route(
+     *     "/setEducationRecord/{user_id}",
+     *     name="Set a user education record",
+     *     methods={ "POST" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error saving user education record"
+     * )
+     * 
+     * @OA\Response(
+     *     response="200",
+     *     description="User education record successfully saved",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="error", type="string", example="false"),
+     *         @OA\Property(property="data", type="integer", example=0),
+     *         @OA\Property(property="message", type="string", example="Error explanation")
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Invalid token",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     * @OA\RequestBody(
+     *      required=true,
+     *      @OA\MediaType(
+     *          mediaType="application/x-www-form-urlencoded",
+     *          @OA\Schema(
+     *              type="object",
+     *              required={"type_record", "description"},
+     *              @OA\Property(
+     *                  property="type_record",
+     *                  description="Type consultation",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="description",
+     *                  description="Description",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="user_id",
+     *     in="path",
+     *     required=true,
+     *     description="User Id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     */
+    public function setHealthRecord(ManagerRegistry $doctrine, Request $request, $user_id, Security $security){
+        
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $em = $doctrine->getManager();
+
+        $message = "";
+
+        try {
+            $code = 200;
+            $error = false;
+            
+            $repositoryUser = $doctrine->getRepository(User::class);
+        
+            $nna = $repositoryUser->find($user_id);
+            $worker = $security->getUser();
+
+            $type_record = $request->get('type_record');
+            $description = $request->get('description');
+            // $consultation_date = $request->get('consultation_date');
+
+            if($nna instanceof User)
+            {
+                $educationRecord = new EducationRecord();
+                $educationRecord->setUser($nna);
+                $educationRecord->setTypeRecord($type_record);
+                $educationRecord->setDate(new \DateTime());
+                // $educationRecord->setConsultationDate(new \DateTime($consultation_date));
+                $educationRecord->setDescription($description);
+                $educationRecord->setWorker($worker);
+                $educationRecord->setIsDeleted(0);
+
+    
+                $em->persist($educationRecord);
+                $em->flush();
+            }
+            else
+            {
+                $code = 500;
+                $error = true;
+                $message = 'The user ID does not exits';
+            }       
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to register the user hearth record - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,
+            'error' => $error,
+            'data' => $code == 200 ? $educationRecord : $message,
+        ];
+
+        $groups = ["educationRecord:main"];
+        return $this->dtoService->getJson($educationRecord, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/editEducationRecord/{education_record_id}",
+     *     name="Edit a user education record",
+     *     methods={ "POST" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error saving user education record"
+     * )
+     * 
+     * @OA\Response(
+     *     response="200",
+     *     description="User education record successfully edited",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="error", type="string", example="false"),
+     *         @OA\Property(property="data", type="integer", example=0),
+     *         @OA\Property(property="message", type="string", example="Error explanation")
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Invalid token",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     * @OA\RequestBody(
+     *      required=true,
+     *      @OA\MediaType(
+     *          mediaType="application/x-www-form-urlencoded",
+     *          @OA\Schema(
+     *              type="object",
+     *              required={"type_record", "description"},
+     *              @OA\Property(
+     *                  property="type_record",
+     *                  description="Type consultation",
+     *                  type="string"
+     *              ),
+     *              @OA\Property(
+     *                  property="description",
+     *                  description="Description",
+     *                  type="string"
+     *              )
+     *          )
+     *      )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="education_record_id",
+     *     in="path",
+     *     required=true,
+     *     description="Education record Id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     */
+    public function editHealthRecord(ManagerRegistry $doctrine, Request $request, Security $security, $education_record_id){
+        
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $em = $doctrine->getManager();
+
+        $message = "";
+
+        try {
+            $code = 200;
+            $error = false;
+
+            $educationRecord = $doctrine->getRepository(EducationRecord::class)->find($education_record_id);
+            $worker = $security->getUser();
+
+            $type_record = $request->get('type_record');
+            $description = $request->get('description');
+            // $consultation_date = $request->get('consultation_date');
+
+            if($educationRecord instanceof EducationRecord)
+            {
+                $educationRecord->setTypeRecord($type_record);
+                $educationRecord->setDate(new \DateTime());
+                // $educationRecord->setConsultationDate(new \DateTime($consultation_date));
+                $educationRecord->setDescription($description);
+                $educationRecord->setWorker($worker);
+                $educationRecord->setIsDeleted(0);
+
+                $em->persist($educationRecord);
+                $em->flush();
+            }
+            else
+            {
+                $code = 500;
+                $error = true;
+                $message = 'The user ID does not exits';
+            }       
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to register the user education record - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,            
+            'error' => $error,
+            'data' => $code == 200 ? $educationRecord : $message,
+        ];
+
+        $groups = ["educationRecord:main"];
+        return $this->dtoService->getJson($educationRecord, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/deleteEducationRecord/{education_record_id}",
+     *     name="Deleted a user education record",
+     *     methods={ "POST" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error deleting user education record"
+     * )
+     * 
+     * @OA\Response(
+     *     response="200",
+     *     description="User education record successfully deleted",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="error", type="string", example="false"),
+     *         @OA\Property(property="data", type="integer", example=0),
+     *         @OA\Property(property="message", type="string", example="Error explanation")
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Invalid token",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     * 
+     * @OA\Parameter(
+     *     name="education_record_id",
+     *     in="path",
+     *     required=true,
+     *     description="Education record Id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     */
+    public function deletedEducationRecord(ManagerRegistry $doctrine, Request $request, $education_record_id){
+        
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $em = $doctrine->getManager();
+
+        $message = "";
+
+        try {
+            $code = 200;
+            $error = false;
+
+            $educationRecord = $doctrine->getRepository(EducationRecord::class)->find($education_record_id);
+
+
+            if($educationRecord instanceof EducationRecord)
+            {
+                $educationRecord->setIsDeleted(1);
+                $em->persist($educationRecord);
+                $em->flush();
+            }
+            else
+            {
+                $code = 500;
+                $error = true;
+                $message = 'The user ID does not exits';
+            }       
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to delete the user hearth record - Error: {$ex->getMessage()}";
+        }
+
+        $response = [
+            'code' => $code,
+            'error' => $error,
+            'data' => $code == 200 ? $educationRecord : $message,
+        ];
+
+        $groups = ["educationRecord:main"];
+        return $this->dtoService->getJson($educationRecord, $groups);
+    }
+
+    /**
+     * @Route(
+     *     "/v2/educationRecord/{id}",
+     *     name="Education Record",
+     *     methods={ "GET" },
+     * )
+     * 
+     * * @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     required=true,
+     *     description="Education record id",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="c",
+     *     in="query",
+     *     required=false,
+     *     description="Count",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * * @OA\Parameter(
+     *     name="p",
+     *     in="query",
+     *     required=false,
+     *     description="Page",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="s",
+     *     in="query",
+     *     required=false,
+     *     description="Sort",
+     *     @OA\Schema(type="string")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="f",
+     *     in="query",
+     *     required=false,
+     *     description="Filter",
+     *     @OA\Schema(type="string")
+     * )
+     */
+    public function getEducationRecordPaginated(Request $request, $id) {
+        $group = ["educationRecord:main"];
+        
+        $dataRequested = $this->restService->getRequestedData($request);
+        $healthRecord = $this->educationRecordService->get($dataRequested);
+        return $this->dtoService->getJson($healthRecord,$group);
+    }
+
 
 
 
