@@ -16,7 +16,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:main', 'user:cpc', 'expedient:main'])]
+    #[Groups(['user:main', 'user:cpc', 'expedient:main', 'expedient:main', 'healthDocument:main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -42,7 +42,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?bool $confirmed = null;
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
-    #[Groups(['user:main', 'user:cpc'])]
+    #[Groups(['user:main', 'user:cpc','healthRecord:main'])]
     private ?UserData $userData = null;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserProfessionalCategoryCentre::class)]
@@ -52,10 +52,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Expedient::class)]
     private Collection $expedients;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: HealthRecords::class, orphanRemoval: true)]
+    private Collection $healthRecords;
+
+    #[ORM\OneToMany(mappedBy: 'worker', targetEntity: HealthRecords::class, orphanRemoval: true)]
+    private Collection $workerHealthRecords;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: HealthDocument::class, orphanRemoval: true)]
+    private Collection $healthDocuments;
+
     public function __construct()
     {
         $this->userProfessionalCategoryCentres = new ArrayCollection();
         $this->expedients = new ArrayCollection();
+        $this->healthRecords = new ArrayCollection();
+        $this->workerHealthRecords = new ArrayCollection();
+        $this->healthDocuments = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -223,6 +235,96 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($expedient->getUser() === $this) {
                 $expedient->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, HealthRecords>
+     */
+    public function getHealthRecords(): Collection
+    {
+        return $this->healthRecords;
+    }
+
+    public function addHealthRecord(HealthRecords $healthRecord): self
+    {
+        if (!$this->healthRecords->contains($healthRecord)) {
+            $this->healthRecords->add($healthRecord);
+            $healthRecord->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHealthRecord(HealthRecords $healthRecord): self
+    {
+        if ($this->healthRecords->removeElement($healthRecord)) {
+            // set the owning side to null (unless already changed)
+            if ($healthRecord->getUser() === $this) {
+                $healthRecord->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, HealthRecords>
+     */
+    public function getWorkerHealthRecords(): Collection
+    {
+        return $this->workerHealthRecords;
+    }
+
+    public function addWorkerHealthRecord(HealthRecords $workerHealthRecord): self
+    {
+        if (!$this->workerHealthRecords->contains($workerHealthRecord)) {
+            $this->workerHealthRecords->add($workerHealthRecord);
+            $workerHealthRecord->setWorker($this);
+        }
+
+        return $this;
+    }
+
+    public function removeWorkerHealthRecord(HealthRecords $workerHealthRecord): self
+    {
+        if ($this->workerHealthRecords->removeElement($workerHealthRecord)) {
+            // set the owning side to null (unless already changed)
+            if ($workerHealthRecord->getWorker() === $this) {
+                $workerHealthRecord->setWorker(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, HealthDocument>
+     */
+    public function getHealthDocuments(): Collection
+    {
+        return $this->healthDocuments;
+    }
+
+    public function addHealthDocument(HealthDocument $healthDocument): self
+    {
+        if (!$this->healthDocuments->contains($healthDocument)) {
+            $this->healthDocuments->add($healthDocument);
+            $healthDocument->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHealthDocument(HealthDocument $healthDocument): self
+    {
+        if ($this->healthDocuments->removeElement($healthDocument)) {
+            // set the owning side to null (unless already changed)
+            if ($healthDocument->getUser() === $this) {
+                $healthDocument->setUser(null);
             }
         }
 

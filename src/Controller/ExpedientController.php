@@ -343,12 +343,14 @@ class ExpedientController extends BaseControllerWithExtras
         }
 
         $response = [
+            'url' => $url_document,
             'code' => $code,
             'error' => $error,
-            'data' => $code == 200 ? $url_document : $message,
+            'data' => $code == 200 ? $document : $message,
         ];
 
-        return $this->dtoService->getJson($response);
+        $group = ["expedient:main"];
+        return $this->dtoService->getJson($response, $group);
     }
 
     /**
