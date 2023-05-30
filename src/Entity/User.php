@@ -61,6 +61,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: HealthDocument::class, orphanRemoval: true)]
     private Collection $healthDocuments;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: EducationDocument::class, orphanRemoval: true)]
+    private Collection $educationDocuments;
+
     public function __construct()
     {
         $this->userProfessionalCategoryCentres = new ArrayCollection();
@@ -68,6 +71,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->healthRecords = new ArrayCollection();
         $this->workerHealthRecords = new ArrayCollection();
         $this->healthDocuments = new ArrayCollection();
+        $this->educationDocuments = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -325,6 +329,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($healthDocument->getUser() === $this) {
                 $healthDocument->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EducationDocument>
+     */
+    public function getEducationDocuments(): Collection
+    {
+        return $this->educationDocuments;
+    }
+
+    public function addEducationDocument(EducationDocument $educationDocument): self
+    {
+        if (!$this->educationDocuments->contains($educationDocument)) {
+            $this->educationDocuments->add($educationDocument);
+            $educationDocument->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEducationDocument(EducationDocument $educationDocument): self
+    {
+        if ($this->educationDocuments->removeElement($educationDocument)) {
+            // set the owning side to null (unless already changed)
+            if ($educationDocument->getUser() === $this) {
+                $educationDocument->setUser(null);
             }
         }
 
