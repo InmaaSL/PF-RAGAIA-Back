@@ -16,7 +16,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:main', 'user:cpc', 'expedient:main', 'expedient:main', 'healthDocument:main'])]
+    #[Groups(['user:main', 'user:cpc', 'expedient:main', 'expedient:main', 'healthDocument:main', 'objective:main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -42,7 +42,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?bool $confirmed = null;
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
-    #[Groups(['user:main', 'user:cpc','healthRecord:main', 'educationRecord:main'])]
+    #[Groups(['user:main', 'user:cpc','healthRecord:main', 'educationRecord:main', 'objective:main'])]
     private ?UserData $userData = null;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserProfessionalCategoryCentre::class)]
@@ -70,6 +70,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'worker', targetEntity: EducationRecord::class, orphanRemoval: true)]
     private Collection $workerEducationRecords;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Objective::class, orphanRemoval: true)]
+    private Collection $objectives;
+
     public function __construct()
     {
         $this->userProfessionalCategoryCentres = new ArrayCollection();
@@ -80,6 +83,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->educationDocuments = new ArrayCollection();
         $this->educationRecords = new ArrayCollection();
         $this->workerEducationRecords = new ArrayCollection();
+        $this->objectives = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -427,6 +431,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($workerEducationRecord->getWorker() === $this) {
                 $workerEducationRecord->setWorker(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Objective>
+     */
+    public function getObjectives(): Collection
+    {
+        return $this->objectives;
+    }
+
+    public function addObjective(Objective $objective): self
+    {
+        if (!$this->objectives->contains($objective)) {
+            $this->objectives->add($objective);
+            $objective->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeObjective(Objective $objective): self
+    {
+        if ($this->objectives->removeElement($objective)) {
+            // set the owning side to null (unless already changed)
+            if ($objective->getUser() === $this) {
+                $objective->setUser(null);
             }
         }
 
