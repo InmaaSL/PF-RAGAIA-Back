@@ -16,7 +16,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:main', 'user:cpc', 'expedient:main', 'expedient:main', 'healthDocument:main', 'objective:main'])]
+    #[Groups(['user:main', 'user:cpc', 'expedient:main', 'expedient:main', 'healthDocument:main', 'objective:main', 'calendar:main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -42,7 +42,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?bool $confirmed = null;
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
-    #[Groups(['user:main', 'user:cpc','healthRecord:main', 'educationRecord:main', 'objective:main'])]
+    #[Groups(['user:main', 'user:cpc','healthRecord:main', 'educationRecord:main', 'objective:main', 'calendar:main'])]
     private ?UserData $userData = null;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserProfessionalCategoryCentre::class)]
@@ -73,6 +73,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Objective::class, orphanRemoval: true)]
     private Collection $objectives;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: CalendarEntry::class)]
+    private Collection $calendarEntriesUser;
+
+    #[ORM\OneToMany(mappedBy: 'worker', targetEntity: CalendarEntry::class)]
+    private Collection $calendarEntriesWorker;
+
     public function __construct()
     {
         $this->userProfessionalCategoryCentres = new ArrayCollection();
@@ -84,6 +90,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->educationRecords = new ArrayCollection();
         $this->workerEducationRecords = new ArrayCollection();
         $this->objectives = new ArrayCollection();
+        $this->calendarEntriesUser = new ArrayCollection();
+        $this->calendarEntriesWorker = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -461,6 +469,66 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($objective->getUser() === $this) {
                 $objective->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CalendarEntry>
+     */
+    public function getCalendarEntriesUser(): Collection
+    {
+        return $this->calendarEntriesUser;
+    }
+
+    public function addCalendarEntriesUser(CalendarEntry $calendarEntriesUser): self
+    {
+        if (!$this->calendarEntriesUser->contains($calendarEntriesUser)) {
+            $this->calendarEntriesUser->add($calendarEntriesUser);
+            $calendarEntriesUser->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCalendarEntriesUser(CalendarEntry $calendarEntriesUser): self
+    {
+        if ($this->calendarEntriesUser->removeElement($calendarEntriesUser)) {
+            // set the owning side to null (unless already changed)
+            if ($calendarEntriesUser->getUser() === $this) {
+                $calendarEntriesUser->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CalendarEntry>
+     */
+    public function getCalendarEntriesWorker(): Collection
+    {
+        return $this->calendarEntriesWorker;
+    }
+
+    public function addCalendarEntriesWorker(CalendarEntry $calendarEntriesWorker): self
+    {
+        if (!$this->calendarEntriesWorker->contains($calendarEntriesWorker)) {
+            $this->calendarEntriesWorker->add($calendarEntriesWorker);
+            $calendarEntriesWorker->setWorker($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCalendarEntriesWorker(CalendarEntry $calendarEntriesWorker): self
+    {
+        if ($this->calendarEntriesWorker->removeElement($calendarEntriesWorker)) {
+            // set the owning side to null (unless already changed)
+            if ($calendarEntriesWorker->getWorker() === $this) {
+                $calendarEntriesWorker->setWorker(null);
             }
         }
 
