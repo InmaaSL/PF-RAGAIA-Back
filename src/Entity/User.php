@@ -16,7 +16,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:main', 'user:cpc', 'expedient:main', 'expedient:main', 'healthDocument:main', 'objective:main', 'calendar:main'])]
+    #[Groups(['user:main', 'user:cpc', 'expedient:main', 'expedient:main', 
+    'healthDocument:main', 'objective:main', 'calendar:main', 'post:main',
+    'postMessage:main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -42,7 +44,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?bool $confirmed = null;
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
-    #[Groups(['user:main', 'user:cpc','healthRecord:main', 'educationRecord:main', 'objective:main', 'calendar:main'])]
+    #[Groups(['user:main', 'user:cpc','healthRecord:main', 'educationRecord:main', 
+    'objective:main', 'calendar:main', 'post:main', 'postMessage:main'])]
     private ?UserData $userData = null;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserProfessionalCategoryCentre::class)]
@@ -79,6 +82,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'worker', targetEntity: CalendarEntry::class)]
     private Collection $calendarEntriesWorker;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Post::class, orphanRemoval: true)]
+    private Collection $posts;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: PostMessage::class, orphanRemoval: true)]
+    private Collection $postMessages;
+
     public function __construct()
     {
         $this->userProfessionalCategoryCentres = new ArrayCollection();
@@ -92,6 +101,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->objectives = new ArrayCollection();
         $this->calendarEntriesUser = new ArrayCollection();
         $this->calendarEntriesWorker = new ArrayCollection();
+        $this->posts = new ArrayCollection();
+        $this->postMessages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -529,6 +540,66 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($calendarEntriesWorker->getWorker() === $this) {
                 $calendarEntriesWorker->setWorker(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Post>
+     */
+    public function getPosts(): Collection
+    {
+        return $this->posts;
+    }
+
+    public function addPost(Post $post): self
+    {
+        if (!$this->posts->contains($post)) {
+            $this->posts->add($post);
+            $post->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removePost(Post $post): self
+    {
+        if ($this->posts->removeElement($post)) {
+            // set the owning side to null (unless already changed)
+            if ($post->getUser() === $this) {
+                $post->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PostMessage>
+     */
+    public function getPostMessages(): Collection
+    {
+        return $this->postMessages;
+    }
+
+    public function addPostMessage(PostMessage $postMessage): self
+    {
+        if (!$this->postMessages->contains($postMessage)) {
+            $this->postMessages->add($postMessage);
+            $postMessage->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removePostMessage(PostMessage $postMessage): self
+    {
+        if ($this->postMessages->removeElement($postMessage)) {
+            // set the owning side to null (unless already changed)
+            if ($postMessage->getUser() === $this) {
+                $postMessage->setUser(null);
             }
         }
 

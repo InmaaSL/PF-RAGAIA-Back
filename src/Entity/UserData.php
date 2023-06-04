@@ -22,11 +22,13 @@ class UserData
     private ?User $user = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:main', 'user:cpc', 'healthRecord:main', 'educationRecord:main', 'objective:main', 'calendar:main'])]
+    #[Groups(['user:main', 'user:cpc', 'healthRecord:main', 'educationRecord:main', 'objective:main', 
+    'calendar:main', 'post:main', 'postMessage:main'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:main', 'healthRecord:main', 'educationRecord:main', 'objective:main', 'calendar:main'])]
+    #[Groups(['user:main', 'healthRecord:main', 'educationRecord:main', 'objective:main', 'calendar:main', 
+    'post:main', 'postMessage:main'])]
     private ?string $surname = null;
 
     #[ORM\Column(length: 20)]
