@@ -18,7 +18,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     #[Groups(['user:main', 'user:cpc', 'expedient:main', 'expedient:main', 
     'healthDocument:main', 'objective:main', 'calendar:main', 'post:main',
-    'postMessage:main'])]
+    'postMessage:main', 'paidRegister:main'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
@@ -45,7 +45,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
     #[Groups(['user:main', 'user:cpc','healthRecord:main', 'educationRecord:main', 
-    'objective:main', 'calendar:main', 'post:main', 'postMessage:main'])]
+    'objective:main', 'calendar:main', 'post:main', 'postMessage:main', 'paidRegister:main'])]
     private ?UserData $userData = null;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserProfessionalCategoryCentre::class)]
@@ -88,6 +88,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: PostMessage::class, orphanRemoval: true)]
     private Collection $postMessages;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: PayRegister::class, orphanRemoval: true)]
+    private Collection $payRegisters;
+
     public function __construct()
     {
         $this->userProfessionalCategoryCentres = new ArrayCollection();
@@ -103,6 +106,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->calendarEntriesWorker = new ArrayCollection();
         $this->posts = new ArrayCollection();
         $this->postMessages = new ArrayCollection();
+        $this->payRegisters = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -600,6 +604,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($postMessage->getUser() === $this) {
                 $postMessage->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PayRegister>
+     */
+    public function getPayRegisters(): Collection
+    {
+        return $this->payRegisters;
+    }
+
+    public function addPayRegister(PayRegister $payRegister): self
+    {
+        if (!$this->payRegisters->contains($payRegister)) {
+            $this->payRegisters->add($payRegister);
+            $payRegister->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removePayRegister(PayRegister $payRegister): self
+    {
+        if ($this->payRegisters->removeElement($payRegister)) {
+            // set the owning side to null (unless already changed)
+            if ($payRegister->getUser() === $this) {
+                $payRegister->setUser(null);
             }
         }
 
