@@ -32,6 +32,10 @@ class PaidManagement
     #[ORM\Column]
     #[Groups(['paidManagement:main'])]
     private ?float $incentive = null;
+    
+    #[ORM\Column]
+    #[Groups(['paidManagement:main'])]
+    private array $age_range = [];
 
     public function getId(): ?int
     {
@@ -82,6 +86,18 @@ class PaidManagement
     public function setIncentive(float $incentive): self
     {
         $this->incentive = $incentive;
+
+        return $this;
+    }
+
+    public function getAgeRange(): array
+    {
+        return $this->age_range;
+    }
+
+    public function setAgeRange(array $age_range): self
+    {
+        $this->age_range = $age_range;
 
         return $this;
     }
