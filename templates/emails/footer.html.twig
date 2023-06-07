@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+{% apply inline_css(source('@styles/style.css')) %}
+<body>
+    <table class="main">
+        <tr class="second-tr">
+            <td class="secondary-footer">
+                <table class="center-table">
+                    {# <tr class="redes-sociales">
+                        <td>
+                            <h4> #}
+                                {#Follow Us#}
+                            {# </h4>
+                        </td>
+                    </tr> #}
+                    <tr class="img-redes">
+                        <td>
+                            <a class="img-social" href="https://www.twitter.com/fundsalcom"> 
+                                <img class="" src="{{ email.image('@img/twitter.png') }}" alt="Instagram" />
+                            </a> 
+                            <a class="img-social" href="https://www.instagram.com/fundsalcom/"> 
+                                <img class="" src="{{ email.image('@img/instagram.png') }}" alt="Instagram" />
+                            </a> 
+                            <a class="img-social" href="https://www.facebook.com/fundsalcom"> 
+                                <img class="" src="{{ email.image('@img/facebook.png') }}" alt="Facebook" />
+                            </a>
+                            <a class="img-social" href="https://www.linkedin.com/company/fundacion-salud-y-comunidad"> 
+                                <img class="" src="{{ email.image('@img/linkedin.png') }}" alt="Facebook" />
+                            </a>
+                            <a class="img-social" href="https://www.youtube.com/user/fsyc"> 
+                                <img class="" src="{{ email.image('@img/youtube.png') }}" alt="Facebook" />
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        
+        <tr class="third-tr">
+            <td>
+                <p>
+                    &copy; 2023 Fundación Salud y Comunidad
+                </p>  
+            </td>
+        </tr>
+    </table>
+</body>
+{% endapply %}
+
+</html>

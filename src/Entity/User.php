@@ -91,6 +91,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: PayRegister::class, orphanRemoval: true)]
     private Collection $payRegisters;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $confirmation_token = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $password_request_token = null;
+
     public function __construct()
     {
         $this->userProfessionalCategoryCentres = new ArrayCollection();
@@ -636,6 +642,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $payRegister->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getConfirmationToken(): ?string
+    {
+        return $this->confirmation_token;
+    }
+
+    public function setConfirmationToken(?string $confirmation_token): self
+    {
+        $this->confirmation_token = $confirmation_token;
+
+        return $this;
+    }
+
+    public function getPasswordRequestToken(): ?string
+    {
+        return $this->password_request_token;
+    }
+
+    public function setPasswordRequestToken(?string $password_request_token): self
+    {
+        $this->password_request_token = $password_request_token;
 
         return $this;
     }
