@@ -1031,7 +1031,7 @@ class UserController extends BaseControllerWithExtras
                 } else {
                     //Si está registrado en el centro comprobamos que categoría profesional tiene: 
                     foreach ($searchUserCentre as $key) {
-                        if(!$key->getProfessionalCategory() || $key->getProfessionalCategory()->getId() != $professionalCategoryId){
+                        if($key->getProfessionalCategory() || $key->getProfessionalCategory()->getId() != $professionalCategoryId){
                             //Si la categoria profesional es diferente a la que ha seleccionado ahora cambiamos la categoria del registro.
                             $key->setProfessionalCategory($professionalCategory);
                             $em->persist($key);
