@@ -524,6 +524,73 @@ class CalendarController extends BaseControllerWithExtras
         return $this->dtoService->getJson($calendarEntries, $groups);
     }
 
+        /**
+     * @Route(
+     *     "/getDayCalendarEntry/{day}",
+     *     name="Get a specific day calendar entry",
+     *     methods={ "GET" },
+     * )
+     *
+     * @OA\Response(
+     *     response=500,
+     *     description="Error getting the calendar day entry"
+     * )
+     *
+     * @OA\Response(
+     *     response="200",
+     *     description="Get the calendar day entry",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="200"),
+     *         @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="userDataID", type="integer"),
+     *           )
+     *     )
+     * )
+     *
+     * @OA\Response(
+     *     response="401",
+     *     description="Authentication error",
+     *     @OA\JsonContent(
+     *         type="object",
+     *         @OA\Property(property="code", type="integer", example="401"),
+     *         @OA\Property(property="message", type="string")
+     *     )
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="day",
+     *     in="path",
+     *     required=true,
+     *     description="Day",
+     *     @OA\Schema(type="date")
+     * )
+     *
+     */
+    public function getDayCalendarEntry(ManagerRegistry $doctrine, $day){
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        $message = "";
+
+        try {
+            $code = 200;
+            $error = false;
+
+            $calendarEntries= $doctrine->getRepository(CalendarEntry::class)->findBy(['entry_date' => new DateTime($day)]);
+
+        } catch (Exception $ex) {
+            $code = 500;
+            $error = true;
+            $message = "An error has occurred trying to get my user info - Error: {$ex->getMessage()}";
+        }
+
+        $groups = ["calendar:main"];
+        return $this->dtoService->getJson($calendarEntries, $groups);
+    }
+
+
     /**
      * @Route(
      *     "/deleteCalendarEntry/{calendar_entry_id}",
