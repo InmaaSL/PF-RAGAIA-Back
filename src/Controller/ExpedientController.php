@@ -455,7 +455,19 @@ class ExpedientController extends BaseControllerWithExtras
     }
 
 
+    /**
+     * @Route(
+     *     "/v2/expedientSpecial",
+     *     name="expedient special",
+     *     methods={ "GET" },
+     * )
+     */
+    public function getUsers() {
+        $group = ["expedient:main"];
 
+        $users = $this->userService->getAll();
+        return $this->dtoService->getJson($users,$group);
+    }
 
     /**
      * @Route(
