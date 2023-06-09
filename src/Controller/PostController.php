@@ -464,7 +464,7 @@ class PostController extends BaseControllerWithExtras
      * )
      * 
      */
-    public function deletePost(ManagerRegistry $doctrine, Request $request, $post_id){
+    public function deletePost(ManagerRegistry $doctrine, Request $request, Security $security, $post_id){
         
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
@@ -478,11 +478,17 @@ class PostController extends BaseControllerWithExtras
             $code = 200;
             $error = false;
             
+            $user = $security->getUser();
             $post = $doctrine->getRepository(Post::class)->find($post_id);
-        
-            $em->remove($post);
-            $em->flush();
 
+            if($user->getId() === $post->getUser()->getId()){
+                $em->remove($post);
+                $em->flush();
+            } else {
+                $code = 500;
+                $error = true;
+                $message = "This is not your post!! ";
+            }
 
         } catch (Exception $ex) {
             $code = 500;
