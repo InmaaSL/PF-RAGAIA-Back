@@ -599,7 +599,7 @@ class RegistrationController extends BaseControllerWithExtras
                 ->to($email)
                 ->bcc('inmaserrano.daw@gmail.com')
                 ->subject('Restablecer contraseña')
-                ->htmlTemplate('emails/registration.html.twig')
+                ->htmlTemplate('emails/reset_password.html.twig')
                 ->context([
                     'username' =>$user->getUserData()->getName() . ' ' . $user->getUserData()->getSurname(), 
                     'link' => $linkToConfirmation,
